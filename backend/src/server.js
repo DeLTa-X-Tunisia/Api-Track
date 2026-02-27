@@ -18,6 +18,7 @@ const equipesRoutes = require('./routes/equipes');
 const lotsRoutes = require('./routes/lots');
 const tubesRoutes = require('./routes/tubes');
 const settingsRoutes = require('./routes/settings');
+const reportsRoutes = require('./routes/reports');
 
 // Import du middleware d'authentification
 const { authenticateToken } = require('./middleware/auth');
@@ -123,6 +124,7 @@ app.use('/api/equipes', equipesRoutes);
 app.use('/api/lots', lotsRoutes);
 app.use('/api/tubes', tubesRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/reports', reportsRoutes);
 
 // Socket.io - Gestion des connexions temps réel
 io.on('connection', (socket) => {

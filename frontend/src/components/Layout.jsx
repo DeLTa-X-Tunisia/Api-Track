@@ -23,7 +23,8 @@ import {
   Users,
   SlidersHorizontal,
   Play,
-  Cylinder
+  Cylinder,
+  FileSpreadsheet
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -42,6 +43,7 @@ const productionItems = [
   { label: 'Bobines en Stock', href: '/bobines', icon: Package, color: 'text-teal-500' },
   { label: 'Bobine de Production', href: '/bobines-production', icon: Play, color: 'text-amber-500' },
   { label: 'Tubes', href: '/tubes', icon: Cylinder, color: 'text-blue-500' },
+  { label: 'Rapports', href: '/rapports', icon: FileSpreadsheet, color: 'text-emerald-500' },
 ];
 
 export default function Layout({ children }) {

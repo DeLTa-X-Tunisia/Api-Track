@@ -220,5 +220,13 @@ export const settingsApi = {
   deleteLogo: (type) => api.delete(`/settings/delete-logo/${type}`),
 };
 
+// ============================================
+// API Rapports & Export
+// ============================================
+export const reportsApi = {
+  getStats: () => api.get('/reports/stats'),
+  downloadSituationGenerale: () => api.get('/reports/situation-generale', { responseType: 'blob' }),
+};
+
 // Export par défaut pour usage générique
 export default api;
