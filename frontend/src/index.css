@@ -1,0 +1,322 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Taille de police de base augmentée pour une meilleure lisibilité */
+html {
+  font-size: 106.25%; /* 17px au lieu de 16px */
+}
+
+/* Styles de base */
+body {
+  @apply bg-gray-50 text-gray-900;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+/* ===== Mobile-first utilities ===== */
+
+/* Safe area insets for notched devices (iPhone X+, etc.) */
+.safe-area-top { padding-top: env(safe-area-inset-top); }
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-area-left { padding-left: env(safe-area-inset-left); }
+.safe-area-right { padding-right: env(safe-area-inset-right); }
+.safe-area-all {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Minimum touch target size (44x44px recommended by Apple/Google) */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Prevent iOS zoom on input focus (font-size must be >= 16px) */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: max(1rem, 16px) !important;
+  }
+}
+
+/* Use dvh (dynamic viewport height) for mobile browsers that hide/show address bar */
+@supports (min-height: 100dvh) {
+  .min-h-dvh { min-height: 100dvh; }
+  .h-dvh { height: 100dvh; }
+}
+
+/* Responsive text ellipsis */
+.truncate-mobile {
+  @apply truncate max-w-[150px] sm:max-w-none;
+}
+
+/* ===== Classes utilitaires personnalisées ===== */
+@layer components {
+  /* Boutons */
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed
+           inline-flex items-center justify-center gap-2;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 
+           focus:ring-primary-500 shadow-sm hover:shadow-md;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-gray-200 text-gray-700 hover:bg-gray-300 
+           focus:ring-gray-500;
+  }
+  
+  .btn-success {
+    @apply btn bg-success-500 text-white hover:bg-success-600 
+           focus:ring-success-500;
+  }
+  
+  .btn-danger {
+    @apply btn bg-danger-500 text-white hover:bg-danger-600 
+           focus:ring-danger-500;
+  }
+  
+  .btn-warning {
+    @apply btn bg-warning-500 text-white hover:bg-warning-600 
+           focus:ring-warning-500;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-gray-600 hover:bg-gray-100 
+           focus:ring-gray-400;
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-primary-600 text-primary-600 
+           hover:bg-primary-50 focus:ring-primary-500;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm rounded-lg;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base rounded-xl;
+  }
+  
+  /* Inputs */
+  .input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           placeholder-gray-400 transition-all duration-200;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-xl bg-white
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
+           placeholder-gray-400 transition-all duration-200;
+  }
+
+  .input-sm {
+    @apply w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
+           placeholder-gray-400 transition-all duration-200;
+  }
+
+  /* Select */
+  .select {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-xl bg-white
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
+           transition-all duration-200 appearance-none
+           bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23667085%22%20d%3D%22M2.22%204.47a.75.75%200%20011.06%200L6%207.19l2.72-2.72a.75.75%200%20111.06%201.06l-3.25%203.25a.75.75%200%2001-1.06%200L2.22%205.53a.75.75%200%20010-1.06z%22%2F%3E%3C%2Fsvg%3E')]
+           bg-[length:12px] bg-[right_12px_center] bg-no-repeat pr-10;
+  }
+  
+  /* Cards */
+  .card {
+    @apply bg-white rounded-2xl shadow-soft border border-gray-100 p-4 sm:p-6;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-lg hover:border-gray-200 transition-all duration-300 cursor-pointer
+           active:scale-[0.98];
+  }
+  
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .badge-success {
+    @apply badge bg-success-50 text-success-600;
+  }
+  
+  .badge-warning {
+    @apply badge bg-warning-50 text-warning-600;
+  }
+  
+  .badge-danger {
+    @apply badge bg-danger-50 text-danger-600;
+  }
+  
+  .badge-primary {
+    @apply badge bg-primary-50 text-primary-600;
+  }
+
+  .badge-gray {
+    @apply badge bg-gray-100 text-gray-600;
+  }
+
+  .badge-accent {
+    @apply badge bg-accent-50 text-accent-600;
+  }
+
+  /* Table */
+  .table-container {
+    @apply bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden;
+  }
+
+  .table-header {
+    @apply bg-gray-50 border-b border-gray-200;
+  }
+
+  .table-row {
+    @apply border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150;
+  }
+
+  /* Page header */
+  .page-header {
+    @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6;
+  }
+
+  .page-title {
+    @apply text-xl sm:text-2xl font-bold text-gray-900;
+  }
+
+  .page-subtitle {
+    @apply text-gray-500 mt-0.5 sm:mt-1;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply card flex items-center gap-4;
+  }
+
+  .stat-icon {
+    @apply w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0;
+  }
+
+  .stat-value {
+    @apply text-2xl font-bold text-gray-900;
+  }
+
+  .stat-label {
+    @apply text-sm text-gray-500;
+  }
+
+  /* Labels */
+  .label {
+    @apply block text-sm font-medium text-gray-700 mb-1.5;
+  }
+
+  /* Separator */
+  .divider {
+    @apply border-t border-gray-200 my-6;
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-10 sm:py-16 text-center px-4;
+  }
+}
+
+/* ===== Mobile responsive table ===== */
+@media (max-width: 640px) {
+  .table-container {
+    @apply -mx-4 rounded-none border-x-0;
+  }
+  .table-container table {
+    font-size: 0.8125rem;
+  }
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ===== Gradient backgrounds ===== */
+.bg-gradient-v2 {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%);
+}
+
+.bg-gradient-sidebar {
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+
+.bg-gradient-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+/* ===== Glassmorphism ===== */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ===== Scrollbar personnalisée ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full hover:bg-gray-400;
+}
+
+/* Scrollbar fine pour le sidebar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full hover:bg-gray-400;
+}
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.gray.300') transparent;
+}
+
+/* ===== Transitions ===== */
+.transition-sidebar {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Focus ring accessible ===== */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+}
+
+/* ===== Selection color ===== */
+::selection {
+  @apply bg-primary-200 text-primary-900;
+}
