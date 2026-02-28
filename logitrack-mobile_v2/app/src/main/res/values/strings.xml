@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Logi-Track</string>
+    <string name="splash_subtitle">Suivi de production — Tubes spirale API 5L</string>
+    <string name="version_text">Logi-Track v2.1.0 — DeLTa-X Tunisia</string>
+    
+    <!-- Config -->
+    <string name="config_header">Configuration de la connexion au serveur</string>
+    <string name="discovery_searching">Recherche du serveur Logi-Track sur le réseau…</string>
+    <string name="btn_connect_server">Se connecter à ce serveur</string>
+    <string name="btn_retry">Réessayer la recherche</string>
+    <string name="btn_manual_config">⚙️  Configurer manuellement</string>
+    <string name="btn_test_connect">Tester et connecter</string>
+    <string name="btn_back_auto">← Retour à la détection automatique</string>
+    <string name="manual_instructions">Entrez l\'adresse IP du PC serveur (visible dans la console Logi-Track V2).</string>
+    <string name="default_port">3003</string>
+    
+    <!-- Main -->
+    <string name="quit_title">Quitter Logi-Track ?</string>
+    <string name="quit_message">Voulez-vous quitter l\'application ?</string>
+    <string name="no_network">Pas de connexion réseau WiFi</string>
+    <string name="server_not_found">Le serveur n\'est pas un serveur Logi-Track</string>
+    <string name="connected_toast">✅ Connecté à Logi-Track V2</string>
+    <string name="connection_failed">❌ Impossible de joindre le serveur</string>
+    <string name="server_invalid">❌ Le serveur n\'est pas un serveur Logi-Track</string>
+</resources>

@@ -1717,11 +1717,11 @@ router.get('/:id/pdf', async (req, res) => {
       // Footer text
       doc.fillColor(C.gray).fontSize(7).font('Helvetica').text(
         `Logi-Track V2 — Rapport Tube N°${tube.numero} — ${new Date().toLocaleDateString('fr-FR')}`,
-        ML, FOOTER_Y, { width: CONTENT_W * 0.7 }
+        ML, FOOTER_Y, { width: CONTENT_W * 0.7, lineBreak: false }
       );
       doc.fillColor(C.gray).fontSize(7).font('Helvetica').text(
         `Page ${i + 1} / ${pageCount}`,
-        ML + CONTENT_W * 0.7, FOOTER_Y, { width: CONTENT_W * 0.3, align: 'right' }
+        ML + CONTENT_W * 0.7, FOOTER_Y, { width: CONTENT_W * 0.3, align: 'right', lineBreak: false }
       );
     }
 

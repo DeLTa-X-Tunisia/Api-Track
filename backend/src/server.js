@@ -50,8 +50,14 @@ app.use(helmet({
 // Middlewares
 app.use(cors({
   origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
+    // Allow configured origins
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Allow any origin in development mode
+    if (process.env.NODE_ENV === 'development') return callback(null, true);
+    // Allow local network origins (for mobile WebView)
+    if (/^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01]))/.test(origin)) {
       return callback(null, true);
     }
     callback(new Error('CORS non autorisé'));
