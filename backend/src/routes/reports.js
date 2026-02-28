@@ -219,9 +219,6 @@ router.get('/situation-generale', async (req, res) => {
       { header: 'Ép. (mm)', key: 'epaisseur', width: 9 },
       { header: 'Long. (m)', key: 'longueur', width: 9 },
       { header: 'Poids (kg)', key: 'poids', width: 10 },
-      { header: 'Statut', key: 'statut', width: 14 },
-      { header: 'Décision', key: 'decision', width: 16 },
-      { header: 'Date SAW', key: 'saw_date', width: 12 },
     ];
 
     // Add etape columns
@@ -231,8 +228,11 @@ router.get('/situation-generale', async (req, res) => {
 
     tubeColumns.push(
       { header: 'Date Début', key: 'created_at', width: 12 },
+      { header: 'Date SAW', key: 'saw_date', width: 12 },
       { header: 'Date Fin', key: 'date_fin', width: 12 },
       { header: 'Réparations', key: 'nb_repairs', width: 11 },
+      { header: 'Statut', key: 'statut', width: 14 },
+      { header: 'Décision', key: 'decision', width: 16 },
     );
 
     wsTubes.columns = tubeColumns;
