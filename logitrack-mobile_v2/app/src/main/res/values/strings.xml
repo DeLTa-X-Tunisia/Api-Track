@@ -12,8 +12,8 @@
     <string name="btn_manual_config">⚙️  Configurer manuellement</string>
     <string name="btn_test_connect">Tester et connecter</string>
     <string name="btn_back_auto">← Retour à la détection automatique</string>
-    <string name="manual_instructions">Entrez l\'adresse IP du PC serveur (visible dans la console Logi-Track V2).</string>
-    <string name="default_port">3003</string>
+    <string name="manual_instructions">Entrez l\'adresse IP du PC serveur et le port (5174 pour le mode développement, 3003 pour la production).</string>
+    <string name="default_port">5174</string>
     
     <!-- Main -->
     <string name="quit_title">Quitter Logi-Track ?</string>

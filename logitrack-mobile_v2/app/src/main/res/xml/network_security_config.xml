@@ -7,13 +7,4 @@
             <certificates src="user" />
         </trust-anchors>
     </base-config>
-
-    <!-- Autoriser spécifiquement les IP locales courantes -->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">192.168.0.0</domain>
-        <domain includeSubdomains="true">192.168.1.0</domain>
-        <domain includeSubdomains="true">10.0.0.0</domain>
-        <domain includeSubdomains="true">172.16.0.0</domain>
-        <domain includeSubdomains="true">localhost</domain>
-    </domain-config>
 </network-security-config>

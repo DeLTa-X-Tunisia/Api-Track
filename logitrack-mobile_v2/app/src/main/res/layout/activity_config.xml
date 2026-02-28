@@ -181,7 +181,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Port (par défaut : 3003)"
+                android:text="Port (par défaut : 5174)"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -192,11 +192,11 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="6dp"
                 android:background="@drawable/input_bg"
-                android:hint="Port (par défaut : 3003)"
+                android:hint="Port (par défaut : 5174)"
                 android:inputType="number"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:text="3003"
+                android:text="5174"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
                 android:textSize="16sp" />
