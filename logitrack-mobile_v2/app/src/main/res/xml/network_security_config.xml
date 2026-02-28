@@ -1,10 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Autoriser HTTP en clair sur le réseau local (pas d'internet) -->
-    <base-config cleartextTrafficPermitted="true">
+    <!-- Configuration par défaut : HTTPS requis -->
+    <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
             <certificates src="user" />
         </trust-anchors>
     </base-config>
+    
+    <!-- Serveur de production : HTTPS via Let's Encrypt -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">mounir.vip</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+    
+    <!-- Réseau local : HTTP autorisé pour développement -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">192.168.0.0</domain>
+        <domain includeSubdomains="true">192.168.1.0</domain>
+        <domain includeSubdomains="true">10.0.0.0</domain>
+        <domain includeSubdomains="true">172.16.0.0</domain>
+    </domain-config>
 </network-security-config>

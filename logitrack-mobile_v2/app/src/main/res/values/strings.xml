@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Logi-Track</string>
     <string name="splash_subtitle">Suivi de production — Tubes spirale API 5L</string>
-    <string name="version_text">Logi-Track v2.1.0 — DeLTa-X Tunisia</string>
+    <string name="version_text">Logi-Track v2.5.0 — DeLTa-X Tunisia (Cloud)</string>
     
     <!-- Config -->
     <string name="config_header">Configuration de la connexion au serveur</string>
@@ -12,6 +12,7 @@
     <string name="btn_manual_config">⚙️  Configurer manuellement</string>
     <string name="btn_test_connect">Tester et connecter</string>
     <string name="btn_back_auto">← Retour à la détection automatique</string>
+    <string name="btn_cloud_server">☁️  Se connecter au serveur cloud</string>
     <string name="manual_instructions">Entrez l\'adresse IP du PC serveur et le port (5174 pour le mode développement, 3003 pour la production).</string>
     <string name="default_port">5174</string>
     

@@ -52,6 +52,12 @@ public class ConfigActivity extends AppCompatActivity {
     private static final int TCP_TIMEOUT = 150;   // ms — TCP connect probe (rapide)
     private static final int HTTP_TIMEOUT = 1500;  // ms — HTTP health check (confirmation)
 
+    // ====================================================================
+    // CONFIGURATION SERVEUR PRODUCTION (VPS/CLOUD)
+    // ====================================================================
+    private static final String PRODUCTION_SERVER_URL = "https://mounir.vip";
+    private static final boolean USE_PRODUCTION_SERVER = true;  // true = VPS, false = réseau local
+
     private NsdHelper nsdHelper;
     private final AtomicBoolean serverFound = new AtomicBoolean(false);
     private ExecutorService scanExecutor;
@@ -70,6 +76,7 @@ public class ConfigActivity extends AppCompatActivity {
     private EditText etServerPort;
     private Button btnConnect;
     private Button btnBackToAuto;
+    private Button btnCloudServer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +87,13 @@ public class ConfigActivity extends AppCompatActivity {
         initViews();
         nsdHelper = new NsdHelper(this);
 
-        // Lancer la découverte automatique
+        // Mode production : connexion directe au serveur VPS
+        if (USE_PRODUCTION_SERVER) {
+            connectToProductionServer();
+            return;
+        }
+
+        // Lancer la découverte automatique (mode réseau local)
         startDiscovery();
 
         btnManual.setOnClickListener(v -> showManualConfig());
@@ -107,7 +120,7 @@ public class ConfigActivity extends AppCompatActivity {
                 return;
             }
 
-            int port = 5174;
+            int port = 443;  // Default to HTTPS port
             if (!portStr.isEmpty()) {
                 try {
                     port = Integer.parseInt(portStr);
@@ -117,7 +130,14 @@ public class ConfigActivity extends AppCompatActivity {
                 }
             }
 
-            String url = "http://" + ip + ":" + port;
+            // Utiliser HTTPS pour les ports standards (443, 80) ou si le domaine est spécifié
+            String protocol = (port == 443 || ip.contains(".") && !ip.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) ? "https" : "http";
+            String url;
+            if (port == 443 || port == 80) {
+                url = protocol + "://" + ip;  // Pas de port explicite pour 80/443
+            } else {
+                url = protocol + "://" + ip + ":" + port;
+            }
             testAndSaveServer(url);
         });
     }
@@ -135,6 +155,52 @@ public class ConfigActivity extends AppCompatActivity {
         etServerPort = findViewById(R.id.et_server_port);
         btnConnect = findViewById(R.id.btn_connect);
         btnBackToAuto = findViewById(R.id.btn_back_to_auto);
+        btnCloudServer = findViewById(R.id.btn_cloud_server);
+    }
+
+    // ====================================================================
+    // CONNEXION SERVEUR PRODUCTION (VPS/CLOUD)
+    // ====================================================================
+
+    /**
+     * Connexion directe au serveur de production (VPS mounir.vip).
+     * Teste la connexion et sauvegarde automatiquement si OK.
+     */
+    private void connectToProductionServer() {
+        progressDiscovery.setVisibility(View.VISIBLE);
+        tvDiscoveryStatus.setText("Connexion au serveur cloud…");
+        tvFoundServer.setVisibility(View.GONE);
+        btnUseFound.setVisibility(View.GONE);
+        btnRetry.setVisibility(View.GONE);
+        btnManual.setVisibility(View.GONE);
+        if (btnCloudServer != null) btnCloudServer.setVisibility(View.GONE);
+
+        new Thread(() -> {
+            if (checkHealthEndpoint(PRODUCTION_SERVER_URL)) {
+                runOnUiThread(() -> {
+                    progressDiscovery.setVisibility(View.GONE);
+                    tvDiscoveryStatus.setText("✅ Connecté au serveur cloud");
+                    tvFoundServer.setVisibility(View.VISIBLE);
+                    tvFoundServer.setText(PRODUCTION_SERVER_URL);
+                    
+                    saveServerConfig(PRODUCTION_SERVER_URL);
+                    Toast.makeText(this, getString(R.string.connected_toast), Toast.LENGTH_SHORT).show();
+                    
+                    // Délai court pour voir le message avant navigation
+                    mainHandler.postDelayed(this::navigateToMain, 800);
+                });
+            } else {
+                runOnUiThread(() -> {
+                    progressDiscovery.setVisibility(View.GONE);
+                    tvDiscoveryStatus.setText("❌ Impossible de joindre le serveur cloud");
+                    btnRetry.setVisibility(View.VISIBLE);
+                    btnManual.setVisibility(View.VISIBLE);
+                    
+                    // Configurer retry pour le serveur cloud
+                    btnRetry.setOnClickListener(v -> connectToProductionServer());
+                });
+            }
+        }).start();
     }
 
     // ====================================================================
@@ -413,17 +479,20 @@ public class ConfigActivity extends AppCompatActivity {
     }
 
     /**
-     * Vérifie /api/health sur une URL donnée.
+     * Vérifie /api/health sur une URL donnée (HTTP ou HTTPS).
      */
     private boolean checkHealthEndpoint(String baseUrl) {
         try {
             URL url = new URL(baseUrl + "/api/health");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setConnectTimeout(5000);
-            conn.setReadTimeout(5000);
+            conn.setConnectTimeout(8000);  // Timeout plus long pour HTTPS/cloud
+            conn.setReadTimeout(8000);
+            conn.setInstanceFollowRedirects(true);  // Suivre les redirections HTTP→HTTPS
 
             int code = conn.getResponseCode();
+            Log.d(TAG, "Health check " + baseUrl + " → HTTP " + code);
+            
             if (code == 200) {
                 BufferedReader reader = new BufferedReader(
                     new InputStreamReader(conn.getInputStream()));
@@ -434,6 +503,7 @@ public class ConfigActivity extends AppCompatActivity {
                 conn.disconnect();
 
                 String response = sb.toString();
+                Log.d(TAG, "Health response: " + response);
                 return response.contains("Logi-Track") || response.contains("LogiTrack") || response.contains("OK");
             }
             conn.disconnect();

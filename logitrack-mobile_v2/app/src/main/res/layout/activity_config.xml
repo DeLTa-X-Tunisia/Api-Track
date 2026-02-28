@@ -125,6 +125,18 @@
                 android:textColor="@color/text_secondary"
                 android:background="?attr/selectableItemBackground" />
 
+            <!-- Bouton serveur cloud (mode local uniquement) -->
+            <Button
+                android:id="@+id/btn_cloud_server"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:text="☁️  Se connecter au serveur cloud"
+                android:textSize="14sp"
+                android:textColor="@color/primary_600"
+                android:background="?attr/selectableItemBackground"
+                android:visibility="gone" />
+
         </LinearLayout>
 
         <!-- === Section Configuration Manuelle === -->
