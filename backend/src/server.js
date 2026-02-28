@@ -168,7 +168,8 @@ app.use('/api/admin', adminRoutes);
 // ============================================
 // Socket.io - Gestion des connexions temps réel avec authentification
 // ============================================
-const connectedUsers = new Map(); // socketId -> { userId, nom, prenom, role, entreprise, code, connectedAt, ip }
+const connectedUsers = new Map(); // socketId -> { userId, nom, prenom, role, entreprise, code, connectedAt, ip, lastActivity }
+const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
 
 // Middleware d'authentification Socket.io
 io.use((socket, next) => {
@@ -204,6 +205,7 @@ io.on('connection', (socket) => {
       connectedAt: new Date().toISOString(),
       ip: ip
     };
+    userInfo.lastActivity = Date.now();
     connectedUsers.set(socket.id, userInfo);
     console.log(`🔌 Utilisateur connecté: ${userInfo.prenom} ${userInfo.nom} (${userInfo.role}) [${socket.id}]`);
     
@@ -233,12 +235,21 @@ io.on('connection', (socket) => {
           connectedAt: new Date().toISOString(),
           ip: ip
         };
+        userInfo.lastActivity = Date.now();
         connectedUsers.set(socket.id, userInfo);
         io.emit('admin:user-connected', userInfo);
         io.emit('admin:users-count', connectedUsers.size);
       } catch (err) {
         // Invalid token, ignore
       }
+    }
+  });
+
+  // Handle user activity ping (reset inactivity timer)
+  socket.on('user:activity', () => {
+    const userInfo = connectedUsers.get(socket.id);
+    if (userInfo) {
+      userInfo.lastActivity = Date.now();
     }
   });
 
@@ -267,6 +278,32 @@ io.on('connection', (socket) => {
 
 // Expose connectedUsers map for admin routes
 app.set('connectedUsers', connectedUsers);
+
+// ============================================
+// Vérification périodique d'inactivité (toutes les 60 secondes)
+// ============================================
+setInterval(() => {
+  const now = Date.now();
+  let disconnectedCount = 0;
+  for (const [socketId, userInfo] of connectedUsers.entries()) {
+    const inactiveDuration = now - (userInfo.lastActivity || now);
+    if (inactiveDuration >= INACTIVITY_TIMEOUT) {
+      const targetSocket = io.sockets.sockets.get(socketId);
+      if (targetSocket) {
+        console.log(`⏰ Auto-déconnexion pour inactivité: ${userInfo.prenom} ${userInfo.nom} (${Math.round(inactiveDuration / 60000)} min)`);
+        targetSocket.emit('session:expired', { reason: 'inactivity', timeout: INACTIVITY_TIMEOUT });
+        targetSocket.disconnect(true);
+        disconnectedCount++;
+      } else {
+        // Socket no longer exists, clean up
+        connectedUsers.delete(socketId);
+      }
+    }
+  }
+  if (disconnectedCount > 0) {
+    io.emit('admin:users-count', connectedUsers.size);
+  }
+}, 60 * 1000); // Check every 60 seconds
 
 // Servir le frontend (build) en production
 const frontendDist = path.join(__dirname, '../../frontend/dist');

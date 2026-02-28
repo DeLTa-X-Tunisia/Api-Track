@@ -167,6 +167,96 @@ export default function Layout({ children }) {
     };
   }, [logout]);
 
+  // ============================================
+  // Auto-logout après 15 minutes d'inactivité
+  // ============================================
+  const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+  const ACTIVITY_PING_INTERVAL = 60 * 1000; // Ping backend every 60s if active
+  const inactivityTimerRef = useRef(null);
+  const lastActivityRef = useRef(Date.now());
+  const hiddenSinceRef = useRef(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const performAutoLogout = () => {
+      console.log('⏰ Déconnexion automatique pour inactivité (15 min)');
+      socketService.disconnect();
+      logout();
+      navigate('/login');
+    };
+
+    const resetInactivityTimer = () => {
+      lastActivityRef.current = Date.now();
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      inactivityTimerRef.current = setTimeout(performAutoLogout, INACTIVITY_TIMEOUT);
+    };
+
+    // Activity events — covers desktop + mobile
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'touchmove', 'click'];
+    // Throttle: only reset timer at most every 30s to avoid perf hit
+    let lastReset = 0;
+    const handleActivity = () => {
+      const now = Date.now();
+      if (now - lastReset > 30000) {
+        lastReset = now;
+        resetInactivityTimer();
+      }
+    };
+
+    activityEvents.forEach(evt => document.addEventListener(evt, handleActivity, { passive: true }));
+
+    // Visibility change: check how long app was hidden
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        hiddenSinceRef.current = Date.now();
+      } else {
+        // Tab became visible again — check if we exceeded timeout while hidden
+        if (hiddenSinceRef.current) {
+          const hiddenDuration = Date.now() - hiddenSinceRef.current;
+          const inactiveDuration = Date.now() - lastActivityRef.current;
+          if (hiddenDuration >= INACTIVITY_TIMEOUT || inactiveDuration >= INACTIVITY_TIMEOUT) {
+            performAutoLogout();
+            return;
+          }
+        }
+        hiddenSinceRef.current = null;
+        resetInactivityTimer();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Periodically send activity ping to backend
+    const pingInterval = setInterval(() => {
+      const timeSinceActivity = Date.now() - lastActivityRef.current;
+      if (timeSinceActivity < INACTIVITY_TIMEOUT && socketService.socket?.connected) {
+        socketService.emit('user:activity');
+      }
+    }, ACTIVITY_PING_INTERVAL);
+
+    // Start initial timer
+    resetInactivityTimer();
+
+    return () => {
+      activityEvents.forEach(evt => document.removeEventListener(evt, handleActivity));
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      clearInterval(pingInterval);
+    };
+  }, [user, logout, navigate]);
+
+  // Listen for server-side inactivity kick
+  useEffect(() => {
+    const handleInactivityKick = () => {
+      console.log('⏰ Déconnecté par le serveur pour inactivité');
+      socketService.disconnect();
+      logout();
+      navigate('/login');
+    };
+    socketService.on('session:expired', handleInactivityKick);
+    return () => socketService.off('session:expired', handleInactivityKick);
+  }, [logout, navigate]);
+
   // Fermer le menu utilisateur au clic extérieur
   useEffect(() => {
     const handleClickOutside = (e) => {
