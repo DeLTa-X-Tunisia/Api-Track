@@ -109,11 +109,11 @@ export default function Login() {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-6 sm:mb-8">
-            <div className="inline-flex items-center justify-center mb-3 sm:mb-4">
+            <div className="flex flex-col items-center justify-center">
               <img 
-                src="/logo.png" 
+                src="/logologin.png" 
                 alt="Logi-Track V2" 
-                className="h-16 sm:h-20 w-auto drop-shadow-2xl"
+                className="h-28 sm:h-36 w-auto drop-shadow-2xl mb-4"
                 onError={(e) => {
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'flex';
@@ -122,14 +122,13 @@ export default function Login() {
               <div className="hidden w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/10 backdrop-blur items-center justify-center">
                 <Shield className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
               </div>
+              <div className="px-4 py-1 rounded-full bg-white/10 backdrop-blur-sm mb-3">
+                <span className="text-sm font-semibold text-primary-200 tracking-wide">V2</span>
+              </div>
+              <p className="text-primary-200 text-xs sm:text-sm italic tracking-wider whitespace-nowrap">
+                AUT VIAM INVENIAM AUT FACIAM
+              </p>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1">Logi-Track</h1>
-            <div className="inline-block px-3 py-0.5 rounded-full bg-white/10 backdrop-blur-sm mb-3">
-              <span className="text-sm font-semibold text-primary-200 tracking-wide">V2</span>
-            </div>
-            <p className="text-primary-200 text-base sm:text-lg">
-              Système de gestion et suivi
-            </p>
           </div>
 
           {/* Form card */}
