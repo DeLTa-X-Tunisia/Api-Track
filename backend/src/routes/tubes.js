@@ -1061,13 +1061,12 @@ router.get('/:id/pdf', async (req, res) => {
       SELECT t.*, l.numero as lot_numero, l2.numero as lot_numero_2,
              b.numero as bobine_numero, b.epaisseur as bobine_epaisseur,
              b.largeur as bobine_largeur, b.poids as bobine_poids,
-             sg.code as grade_code, sg.nom as grade_nom,
+             b.grade as grade_code,
              pp.code as parametre_numero
       FROM tubes t
       LEFT JOIN lots l ON t.lot_id = l.id
       LEFT JOIN lots l2 ON t.lot_id_2 = l2.id
       LEFT JOIN bobines b ON l.bobine_id = b.id
-      LEFT JOIN steel_grades sg ON b.steel_grade_id = sg.id
       LEFT JOIN presets_soudure pp ON t.parametre_id = pp.id
       WHERE t.id = ?
     `, [req.params.id]);
