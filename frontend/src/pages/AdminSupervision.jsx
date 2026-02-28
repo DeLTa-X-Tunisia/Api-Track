@@ -24,7 +24,8 @@ import {
   X,
   Radio,
   Power,
-  CheckCircle
+  CheckCircle,
+  Trash2
 } from 'lucide-react';
 
 // Role labels & colors
@@ -437,7 +438,7 @@ export default function AdminSupervision() {
               const typeConf = MESSAGE_TYPES.find(t => t.value === msg.type) || MESSAGE_TYPES[0];
               const TypeIcon = typeConf.icon;
               return (
-                <div key={msg.id || idx} className="px-5 py-3 flex items-start gap-3 hover:bg-gray-50">
+                <div key={msg.id || idx} className="px-5 py-3 flex items-start gap-3 hover:bg-gray-50 group">
                   <TypeIcon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${typeConf.color}`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-800">{msg.message}</p>
@@ -448,6 +449,13 @@ export default function AdminSupervision() {
                   <span className={`text-xs px-2 py-0.5 rounded-full border ${typeConf.bg}`}>
                     {typeConf.label}
                   </span>
+                  <button
+                    onClick={() => setSentMessages(prev => prev.filter((_, i) => i !== idx))}
+                    title="Supprimer ce message"
+                    className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               );
             })}

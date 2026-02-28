@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import socketService from '../services/socket';
 import { settingsApi } from '../services/api';
-import { useToast } from './Toast';
 import { 
   LayoutDashboard, 
   LogOut,
@@ -28,7 +27,11 @@ import {
   FileSpreadsheet,
   Smartphone,
   Download,
-  Radio
+  Radio,
+  AlertTriangle,
+  Info,
+  AlertCircle,
+  Megaphone
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -54,7 +57,6 @@ export default function Layout({ children }) {
   const { user, logout, isAdmin, isSystemAdmin, canManageUsers } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const toast = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -102,24 +104,28 @@ export default function Layout({ children }) {
   }, []);
 
   // Admin notification & kicked listeners
-  const [adminNotification, setAdminNotification] = useState(null);
+  const [adminMessageModal, setAdminMessageModal] = useState(null);
   useEffect(() => {
     const handleAdminMessage = (payload) => {
-      // Show a persistent notification overlay
-      setAdminNotification(payload);
-      // Also show a toast
-      const typeMap = { info: 'info', warning: 'warning', urgent: 'error' };
-      toast[typeMap[payload.type] || 'info'](`📢 ${payload.sender}: ${payload.message}`);
+      // Show as modal dialog
+      setAdminMessageModal(payload);
     };
 
     const handleKicked = (payload) => {
-      // Force logout
-      toast.error(payload.message || 'Vous avez été déconnecté par l\'administrateur.');
+      // Force logout - show as modal first
+      setAdminMessageModal({
+        type: 'urgent',
+        message: payload.message || 'Vous avez été déconnecté par l\'administrateur.',
+        sender: 'Système',
+        senderRole: 'Administrateur Système',
+        timestamp: new Date().toISOString(),
+        isKick: true
+      });
       socketService.disconnect();
       setTimeout(() => {
         localStorage.removeItem('logitrack2_token');
         window.location.href = '/login';
-      }, 2000);
+      }, 4000);
     };
 
     socketService.on('admin:message', handleAdminMessage);
@@ -129,7 +135,7 @@ export default function Layout({ children }) {
       socketService.off('admin:message', handleAdminMessage);
       socketService.off('admin:kicked', handleKicked);
     };
-  }, [toast, logout]);
+  }, [logout]);
 
   // Fermer le menu utilisateur au clic extérieur
   useEffect(() => {
@@ -621,44 +627,80 @@ export default function Layout({ children }) {
           </div>
         </header>
 
-        {/* Admin notification banner */}
-        {adminNotification && (
-          <div className={`
-            mx-4 mt-4 p-4 rounded-xl border shadow-sm animate-fadeIn flex items-start gap-3
-            ${adminNotification.type === 'urgent' 
-              ? 'bg-red-50 border-red-200 text-red-800' 
-              : adminNotification.type === 'warning' 
-                ? 'bg-amber-50 border-amber-200 text-amber-800' 
-                : 'bg-blue-50 border-blue-200 text-blue-800'
-            }
-          `}>
-            <div className={`p-1.5 rounded-lg flex-shrink-0 ${
-              adminNotification.type === 'urgent' ? 'bg-red-100' : 
-              adminNotification.type === 'warning' ? 'bg-amber-100' : 'bg-blue-100'
-            }`}>
-              {adminNotification.type === 'urgent' 
-                ? <AlertTriangle className="w-5 h-5 text-red-600" />
-                : adminNotification.type === 'warning'
-                  ? <AlertTriangle className="w-5 h-5 text-amber-600" />
-                  : <Radio className="w-5 h-5 text-blue-600" />
-              }
+        {/* Admin message modal */}
+        {adminMessageModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className={`
+              relative bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fadeIn overflow-hidden
+              ${adminMessageModal.type === 'urgent' ? 'ring-2 ring-red-500' : 
+                adminMessageModal.type === 'warning' ? 'ring-2 ring-amber-400' : 'ring-2 ring-blue-400'}
+            `}>
+              {/* Colored header bar */}
+              <div className={`px-6 py-4 flex items-center gap-3 ${
+                adminMessageModal.type === 'urgent' 
+                  ? 'bg-gradient-to-r from-red-600 to-red-700' 
+                  : adminMessageModal.type === 'warning'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600'
+              }`}>
+                <div className="p-2 bg-white/20 rounded-lg">
+                  {adminMessageModal.type === 'urgent' 
+                    ? <AlertCircle className="w-6 h-6 text-white" />
+                    : adminMessageModal.type === 'warning'
+                      ? <AlertTriangle className="w-6 h-6 text-white" />
+                      : <Megaphone className="w-6 h-6 text-white" />
+                  }
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">
+                    {adminMessageModal.type === 'urgent' ? 'Message urgent' : 
+                     adminMessageModal.type === 'warning' ? 'Avertissement' : 'Message de l\'administrateur'}
+                  </h3>
+                  <p className="text-sm text-white/80">Communication interne Logi-Track</p>
+                </div>
+              </div>
+
+              {/* Message body */}
+              <div className="px-6 py-5">
+                <div className={`p-4 rounded-xl border ${
+                  adminMessageModal.type === 'urgent' ? 'bg-red-50 border-red-100' :
+                  adminMessageModal.type === 'warning' ? 'bg-amber-50 border-amber-100' :
+                  'bg-blue-50 border-blue-100'
+                }`}>
+                  <p className="text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{adminMessageModal.message}</p>
+                </div>
+                <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
+                  <User className="w-3.5 h-3.5" />
+                  <span>De : <strong className="text-gray-600">{adminMessageModal.sender}</strong> ({adminMessageModal.senderRole})</span>
+                  <span className="mx-1">•</span>
+                  <span>{adminMessageModal.timestamp ? new Date(adminMessageModal.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                </div>
+                {adminMessageModal.isKick && (
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-700 font-medium">Vous allez être redirigé vers la page de connexion...</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              {!adminMessageModal.isKick && (
+                <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                  <button
+                    onClick={() => setAdminMessageModal(null)}
+                    className={`px-6 py-2.5 text-sm font-semibold text-white rounded-xl shadow-sm transition-all ${
+                      adminMessageModal.type === 'urgent' 
+                        ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800' 
+                        : adminMessageModal.type === 'warning'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
+                          : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                    }`}
+                  >
+                    J'ai compris
+                  </button>
+                </div>
+              )}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold">
-                {adminNotification.type === 'urgent' ? '🔴 Message urgent' : 
-                 adminNotification.type === 'warning' ? '⚠️ Avertissement' : '📢 Message de l\'administrateur'}
-              </p>
-              <p className="text-sm mt-0.5">{adminNotification.message}</p>
-              <p className="text-xs opacity-60 mt-1">
-                De : {adminNotification.sender} ({adminNotification.senderRole})
-              </p>
-            </div>
-            <button
-              onClick={() => setAdminNotification(null)}
-              className="p-1 rounded-lg hover:bg-black/5 transition-colors flex-shrink-0"
-            >
-              <X className="w-4 h-4" />
-            </button>
           </div>
         )}
 
