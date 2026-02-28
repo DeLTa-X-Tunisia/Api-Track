@@ -20,7 +20,6 @@ const tubesRoutes = require('./routes/tubes');
 const settingsRoutes = require('./routes/settings');
 const reportsRoutes = require('./routes/reports');
 const adminRoutes = require('./routes/admin');
-const adminDataRoutes = require('./routes/adminData');
 
 // Import du middleware d'authentification
 const { authenticateToken } = require('./middleware/auth');
@@ -165,7 +164,6 @@ app.use('/api/tubes', tubesRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/admin-data', adminDataRoutes);
 
 // ============================================
 // Socket.io - Gestion des connexions temps réel avec authentification

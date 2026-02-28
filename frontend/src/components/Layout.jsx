@@ -31,8 +31,7 @@ import {
   AlertTriangle,
   Info,
   AlertCircle,
-  Megaphone,
-  Database
+  Megaphone
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -530,26 +529,6 @@ export default function Layout({ children }) {
                       )}
                     </Link>
                   )}
-                  {isSystemAdmin && (
-                    <Link
-                      to="/admin-data"
-                      title={sidebarCollapsed ? 'Administration Données' : ''}
-                      className={`
-                        flex items-center gap-3 rounded-xl transition-all duration-200
-                        ${sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5'}
-                        ${isActive('/admin-data') 
-                          ? 'bg-purple-50 text-purple-700 shadow-sm' 
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                        }
-                      `}
-                    >
-                      <Database className={`w-5 h-5 flex-shrink-0 ${isActive('/admin-data') ? 'text-purple-600' : 'text-purple-500'}`} />
-                      {!sidebarCollapsed && <span className={isActive('/admin-data') ? 'font-medium' : ''}>Admin Données</span>}
-                      {isActive('/admin-data') && !sidebarCollapsed && (
-                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-purple-400" />
-                      )}
-                    </Link>
-                  )}
                   <Link
                     to="/settings"
                     title={sidebarCollapsed ? 'Paramètres' : ''}
@@ -661,7 +640,6 @@ export default function Layout({ children }) {
                           ...productionItems,
                           { label: 'Utilisateurs', href: '/utilisateurs' },
                           { label: 'Supervision Admin', href: '/supervision' },
-                          { label: 'Admin Données', href: '/admin-data' },
                           { label: 'Paramètres', href: '/settings' }
                         ];
                         return allItems.find(i => isActive(i.href))?.label || 'Logi-Track V2';

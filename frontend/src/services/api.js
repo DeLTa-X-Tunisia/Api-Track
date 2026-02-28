@@ -238,42 +238,5 @@ export const adminApi = {
   sendMessage: (data) => api.post('/admin/send-message', data),
 };
 
-// ============================================
-// API Admin Data (correction des dates)
-// ============================================
-export const adminDataApi = {
-  // Recherche globale
-  search: (query, type) => {
-    const params = new URLSearchParams({ query });
-    if (type) params.append('type', type);
-    return api.get(`/admin-data/search?${params}`);
-  },
-  
-  // Bobines
-  getBobine: (id) => api.get(`/admin-data/bobines/${id}`),
-  updateBobineDates: (id, data) => api.put(`/admin-data/bobines/${id}/dates`, data),
-  
-  // Lots
-  getLot: (id) => api.get(`/admin-data/lots/${id}`),
-  updateLotDates: (id, data) => api.put(`/admin-data/lots/${id}/dates`, data),
-  
-  // Tubes
-  getTube: (id) => api.get(`/admin-data/tubes/${id}`),
-  updateTubeDates: (id, data) => api.put(`/admin-data/tubes/${id}/dates`, data),
-  
-  // Etapes
-  updateEtapeDates: (id, data) => api.put(`/admin-data/tube-etapes/${id}/dates`, data),
-  
-  // Historique
-  updateHistoriqueDates: (id, data) => api.put(`/admin-data/tube-historique/${id}/dates`, data),
-  
-  // Journal des corrections
-  getCorrectionsLog: (page, limit, tableFilter) => {
-    const params = new URLSearchParams({ page: page || 1, limit: limit || 20 });
-    if (tableFilter) params.append('table_modifiee', tableFilter);
-    return api.get(`/admin-data/corrections-log?${params}`);
-  },
-};
-
 // Export par défaut pour usage générique
 export default api;
