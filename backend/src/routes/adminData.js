@@ -31,7 +31,7 @@ router.get('/search', async (req, res) => {
 
     if (!type || type === 'lots') {
       const [lots] = await pool.execute(
-        `SELECT l.id, l.numero, l.date_creation, l.date_fin, l.statut,
+        `SELECT l.id, l.numero, l.created_at as date_creation, l.date_fin, l.statut,
                 b.numero as bobine_numero
          FROM lots l
          LEFT JOIN bobines b ON l.bobine_id = b.id
@@ -43,7 +43,7 @@ router.get('/search', async (req, res) => {
 
     if (!type || type === 'tubes') {
       const [tubes] = await pool.execute(
-        `SELECT t.id, t.numero, t.date_creation, t.date_fin, t.statut, t.decision,
+        `SELECT t.id, t.numero, t.created_at as date_creation, t.date_fin_production as date_fin, t.statut, t.decision,
                 l.numero as lot_numero, b.numero as bobine_numero
          FROM tubes t
          LEFT JOIN lots l ON t.lot_id = l.id
@@ -166,7 +166,7 @@ router.put('/lots/:id/dates', async (req, res) => {
 
     // Récupérer l'ancienne valeur
     const [oldData] = await connection.execute(
-      'SELECT numero, date_creation, date_fin FROM lots WHERE id = ?',
+      'SELECT numero, created_at, date_fin FROM lots WHERE id = ?',
       [lotId]
     );
 
@@ -179,18 +179,18 @@ router.put('/lots/:id/dates', async (req, res) => {
 
     // Mettre à jour
     await connection.execute(
-      'UPDATE lots SET date_creation = ?, date_fin = ? WHERE id = ?',
+      'UPDATE lots SET created_at = ?, date_fin = ? WHERE id = ?',
       [date_creation, date_fin || null, lotId]
     );
 
     // Logger les corrections
-    if (date_creation !== (oldLot.date_creation ? oldLot.date_creation.toISOString().slice(0,19).replace('T',' ') : null)) {
+    if (date_creation !== (oldLot.created_at ? oldLot.created_at.toISOString().slice(0,19).replace('T',' ') : null)) {
       await connection.execute(
         `INSERT INTO admin_corrections_log 
          (table_modifiee, enregistrement_id, enregistrement_ref, champ_modifie, ancienne_valeur, nouvelle_valeur, motif, admin_id, admin_nom, admin_prenom)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['lots', lotId, oldLot.numero, 'date_creation',
-         oldLot.date_creation ? oldLot.date_creation.toISOString() : null,
+        ['lots', lotId, oldLot.numero, 'created_at',
+         oldLot.created_at ? oldLot.created_at.toISOString() : null,
          date_creation, motif, req.user.id, req.user.nom, req.user.prenom]
       );
     }
@@ -277,7 +277,7 @@ router.put('/tubes/:id/dates', async (req, res) => {
 
     // Récupérer l'ancienne valeur
     const [oldData] = await connection.execute(
-      'SELECT numero, date_creation, date_fin FROM tubes WHERE id = ?',
+      'SELECT numero, created_at, date_fin_production FROM tubes WHERE id = ?',
       [tubeId]
     );
 
@@ -290,30 +290,30 @@ router.put('/tubes/:id/dates', async (req, res) => {
 
     // Mettre à jour
     await connection.execute(
-      'UPDATE tubes SET date_creation = ?, date_fin = ? WHERE id = ?',
+      'UPDATE tubes SET created_at = ?, date_fin_production = ? WHERE id = ?',
       [date_creation, date_fin || null, tubeId]
     );
 
     // Logger les corrections
     const formatDate = (d) => d ? d.toISOString() : null;
 
-    if (date_creation && formatDate(oldTube.date_creation) !== date_creation) {
+    if (date_creation && formatDate(oldTube.created_at) !== date_creation) {
       await connection.execute(
         `INSERT INTO admin_corrections_log 
          (table_modifiee, enregistrement_id, enregistrement_ref, champ_modifie, ancienne_valeur, nouvelle_valeur, motif, admin_id, admin_nom, admin_prenom)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['tubes', tubeId, oldTube.numero, 'date_creation',
-         formatDate(oldTube.date_creation), date_creation, motif, req.user.id, req.user.nom, req.user.prenom]
+        ['tubes', tubeId, oldTube.numero, 'created_at',
+         formatDate(oldTube.created_at), date_creation, motif, req.user.id, req.user.nom, req.user.prenom]
       );
     }
 
-    if (formatDate(oldTube.date_fin) !== (date_fin || null)) {
+    if (formatDate(oldTube.date_fin_production) !== (date_fin || null)) {
       await connection.execute(
         `INSERT INTO admin_corrections_log 
          (table_modifiee, enregistrement_id, enregistrement_ref, champ_modifie, ancienne_valeur, nouvelle_valeur, motif, admin_id, admin_nom, admin_prenom)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['tubes', tubeId, oldTube.numero, 'date_fin',
-         formatDate(oldTube.date_fin), date_fin || null, motif, req.user.id, req.user.nom, req.user.prenom]
+        ['tubes', tubeId, oldTube.numero, 'date_fin_production',
+         formatDate(oldTube.date_fin_production), date_fin || null, motif, req.user.id, req.user.nom, req.user.prenom]
       );
     }
 
