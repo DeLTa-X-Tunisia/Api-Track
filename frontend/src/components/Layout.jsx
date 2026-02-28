@@ -105,13 +105,28 @@ export default function Layout({ children }) {
 
   // Admin notification & kicked listeners
   const [adminMessageModal, setAdminMessageModal] = useState(null);
+  const notifAudioRef = useRef(null);
   useEffect(() => {
+    notifAudioRef.current = new Audio('/message.mp3');
+    notifAudioRef.current.volume = 0.7;
+  }, []);
+  useEffect(() => {
+    const playNotifSound = () => {
+      try {
+        if (notifAudioRef.current) {
+          notifAudioRef.current.currentTime = 0;
+          notifAudioRef.current.play().catch(() => {});
+        }
+      } catch {}
+    };
     const handleAdminMessage = (payload) => {
+      playNotifSound();
       // Show as modal dialog
       setAdminMessageModal(payload);
     };
 
     const handleKicked = (payload) => {
+      playNotifSound();
       // Force logout - show as modal first
       setAdminMessageModal({
         type: 'urgent',
