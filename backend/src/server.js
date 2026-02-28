@@ -19,6 +19,7 @@ const lotsRoutes = require('./routes/lots');
 const tubesRoutes = require('./routes/tubes');
 const settingsRoutes = require('./routes/settings');
 const reportsRoutes = require('./routes/reports');
+const adminRoutes = require('./routes/admin');
 
 // Import du middleware d'authentification
 const { authenticateToken } = require('./middleware/auth');
@@ -162,15 +163,110 @@ app.use('/api/lots', lotsRoutes);
 app.use('/api/tubes', tubesRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/admin', adminRoutes);
 
-// Socket.io - Gestion des connexions temps réel
+// ============================================
+// Socket.io - Gestion des connexions temps réel avec authentification
+// ============================================
+const connectedUsers = new Map(); // socketId -> { userId, nom, prenom, role, entreprise, code, connectedAt, ip }
+
+// Middleware d'authentification Socket.io
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+  if (!token) {
+    // Allow anonymous connections (they just won't be tracked as users)
+    socket.userData = null;
+    return next();
+  }
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, require('./middleware/auth').JWT_SECRET);
+    socket.userData = decoded;
+    next();
+  } catch (err) {
+    socket.userData = null;
+    next(); // Still allow connection, just not authenticated
+  }
+});
+
 io.on('connection', (socket) => {
-  console.log(`🔌 Client connecté: ${socket.id}`);
+  const ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
   
+  if (socket.userData) {
+    const userInfo = {
+      socketId: socket.id,
+      userId: socket.userData.userId,
+      nom: socket.userData.nom,
+      prenom: socket.userData.prenom,
+      role: socket.userData.role,
+      entreprise: socket.userData.entreprise || '',
+      code: socket.userData.code,
+      connectedAt: new Date().toISOString(),
+      ip: ip
+    };
+    connectedUsers.set(socket.id, userInfo);
+    console.log(`🔌 Utilisateur connecté: ${userInfo.prenom} ${userInfo.nom} (${userInfo.role}) [${socket.id}]`);
+    
+    // Notify admins about new connection
+    io.emit('admin:user-connected', userInfo);
+    // Send current connected users count
+    io.emit('admin:users-count', connectedUsers.size);
+  } else {
+    console.log(`🔌 Client anonyme connecté: ${socket.id}`);
+  }
+
+  // Handle user re-authentication (e.g. after login)
+  socket.on('auth:register', (data) => {
+    if (data?.token) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(data.token, require('./middleware/auth').JWT_SECRET);
+        socket.userData = decoded;
+        const userInfo = {
+          socketId: socket.id,
+          userId: decoded.userId,
+          nom: decoded.nom,
+          prenom: decoded.prenom,
+          role: decoded.role,
+          entreprise: decoded.entreprise || '',
+          code: decoded.code,
+          connectedAt: new Date().toISOString(),
+          ip: ip
+        };
+        connectedUsers.set(socket.id, userInfo);
+        io.emit('admin:user-connected', userInfo);
+        io.emit('admin:users-count', connectedUsers.size);
+      } catch (err) {
+        // Invalid token, ignore
+      }
+    }
+  });
+
+  // Handle admin force-disconnect
+  socket.on('admin:force-disconnect', (targetSocketId) => {
+    if (!socket.userData || socket.userData.role !== 'system_admin') return;
+    const targetSocket = io.sockets.sockets.get(targetSocketId);
+    if (targetSocket) {
+      targetSocket.emit('admin:kicked', { message: 'Vous avez été déconnecté par l\'administrateur système.' });
+      targetSocket.disconnect(true);
+    }
+  });
+
   socket.on('disconnect', () => {
-    console.log(`❌ Client déconnecté: ${socket.id}`);
+    const userInfo = connectedUsers.get(socket.id);
+    if (userInfo) {
+      console.log(`❌ Utilisateur déconnecté: ${userInfo.prenom} ${userInfo.nom} [${socket.id}]`);
+      connectedUsers.delete(socket.id);
+      io.emit('admin:user-disconnected', { socketId: socket.id, userId: userInfo.userId });
+      io.emit('admin:users-count', connectedUsers.size);
+    } else {
+      console.log(`❌ Client anonyme déconnecté: ${socket.id}`);
+    }
   });
 });
+
+// Expose connectedUsers map for admin routes
+app.set('connectedUsers', connectedUsers);
 
 // Servir le frontend (build) en production
 const frontendDist = path.join(__dirname, '../../frontend/dist');

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import socketService from '../services/socket';
 import { settingsApi } from '../services/api';
+import { useToast } from './Toast';
 import { 
   LayoutDashboard, 
   LogOut,
@@ -26,7 +27,8 @@ import {
   Cylinder,
   FileSpreadsheet,
   Smartphone,
-  Download
+  Download,
+  Radio
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -49,9 +51,10 @@ const productionItems = [
 ];
 
 export default function Layout({ children }) {
-  const { user, logout, isAdmin, canManageUsers } = useAuth();
+  const { user, logout, isAdmin, isSystemAdmin, canManageUsers } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const toast = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -90,8 +93,43 @@ export default function Layout({ children }) {
   // Connecter Socket.io
   useEffect(() => {
     socketService.connect();
+    // Register auth after connection
+    const token = localStorage.getItem('logitrack2_token');
+    if (token) {
+      socketService.registerAuth(token);
+    }
     return () => socketService.disconnect();
   }, []);
+
+  // Admin notification & kicked listeners
+  const [adminNotification, setAdminNotification] = useState(null);
+  useEffect(() => {
+    const handleAdminMessage = (payload) => {
+      // Show a persistent notification overlay
+      setAdminNotification(payload);
+      // Also show a toast
+      const typeMap = { info: 'info', warning: 'warning', urgent: 'error' };
+      toast[typeMap[payload.type] || 'info'](`📢 ${payload.sender}: ${payload.message}`);
+    };
+
+    const handleKicked = (payload) => {
+      // Force logout
+      toast.error(payload.message || 'Vous avez été déconnecté par l\'administrateur.');
+      socketService.disconnect();
+      setTimeout(() => {
+        localStorage.removeItem('logitrack2_token');
+        window.location.href = '/login';
+      }, 2000);
+    };
+
+    socketService.on('admin:message', handleAdminMessage);
+    socketService.on('admin:kicked', handleKicked);
+
+    return () => {
+      socketService.off('admin:message', handleAdminMessage);
+      socketService.off('admin:kicked', handleKicked);
+    };
+  }, [toast, logout]);
 
   // Fermer le menu utilisateur au clic extérieur
   useEffect(() => {
@@ -342,6 +380,29 @@ export default function Layout({ children }) {
                       )}
                     </Link>
                   )}
+                  {isSystemAdmin && (
+                    <Link
+                      to="/supervision"
+                      title={sidebarCollapsed ? 'Supervision' : ''}
+                      className={`
+                        flex items-center gap-3 rounded-xl transition-all duration-200
+                        ${sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5'}
+                        ${isActive('/supervision') 
+                          ? 'bg-red-50 text-red-700 shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        }
+                      `}
+                    >
+                      <div className="relative flex-shrink-0">
+                        <Radio className={`w-5 h-5 ${isActive('/supervision') ? 'text-red-600' : 'text-red-500'}`} />
+                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                      </div>
+                      {!sidebarCollapsed && <span className={isActive('/supervision') ? 'font-medium' : ''}>Supervision</span>}
+                      {isActive('/supervision') && !sidebarCollapsed && (
+                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-red-400" />
+                      )}
+                    </Link>
+                  )}
                   <Link
                     to="/settings"
                     title={sidebarCollapsed ? 'Paramètres' : ''}
@@ -452,6 +513,7 @@ export default function Layout({ children }) {
                           ...productionParamsItems,
                           ...productionItems,
                           { label: 'Utilisateurs', href: '/utilisateurs' },
+                          { label: 'Supervision Admin', href: '/supervision' },
                           { label: 'Paramètres', href: '/settings' }
                         ];
                         return allItems.find(i => isActive(i.href))?.label || 'Logi-Track V2';
@@ -558,6 +620,47 @@ export default function Layout({ children }) {
             </div>
           </div>
         </header>
+
+        {/* Admin notification banner */}
+        {adminNotification && (
+          <div className={`
+            mx-4 mt-4 p-4 rounded-xl border shadow-sm animate-fadeIn flex items-start gap-3
+            ${adminNotification.type === 'urgent' 
+              ? 'bg-red-50 border-red-200 text-red-800' 
+              : adminNotification.type === 'warning' 
+                ? 'bg-amber-50 border-amber-200 text-amber-800' 
+                : 'bg-blue-50 border-blue-200 text-blue-800'
+            }
+          `}>
+            <div className={`p-1.5 rounded-lg flex-shrink-0 ${
+              adminNotification.type === 'urgent' ? 'bg-red-100' : 
+              adminNotification.type === 'warning' ? 'bg-amber-100' : 'bg-blue-100'
+            }`}>
+              {adminNotification.type === 'urgent' 
+                ? <AlertTriangle className="w-5 h-5 text-red-600" />
+                : adminNotification.type === 'warning'
+                  ? <AlertTriangle className="w-5 h-5 text-amber-600" />
+                  : <Radio className="w-5 h-5 text-blue-600" />
+              }
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold">
+                {adminNotification.type === 'urgent' ? '🔴 Message urgent' : 
+                 adminNotification.type === 'warning' ? '⚠️ Avertissement' : '📢 Message de l\'administrateur'}
+              </p>
+              <p className="text-sm mt-0.5">{adminNotification.message}</p>
+              <p className="text-xs opacity-60 mt-1">
+                De : {adminNotification.sender} ({adminNotification.senderRole})
+              </p>
+            </div>
+            <button
+              onClick={() => setAdminNotification(null)}
+              className="p-1 rounded-lg hover:bg-black/5 transition-colors flex-shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Page content */}
         <main className="flex-1 p-4 lg:p-6">

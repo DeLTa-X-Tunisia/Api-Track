@@ -228,5 +228,15 @@ export const reportsApi = {
   downloadSituationGenerale: () => api.get('/reports/situation-generale', { responseType: 'blob' }),
 };
 
+// ============================================
+// API Admin Supervision
+// ============================================
+export const adminApi = {
+  getConnectedUsers: () => api.get('/admin/connected-users'),
+  disconnectUser: (socketId) => api.post('/admin/disconnect-user', { socketId }),
+  disconnectAll: () => api.post('/admin/disconnect-all'),
+  sendMessage: (data) => api.post('/admin/send-message', data),
+};
+
 // Export par défaut pour usage générique
 export default api;

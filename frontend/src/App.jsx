@@ -18,6 +18,7 @@ const EquipesProduction = lazy(() => import('./pages/EquipesProduction'));
 const BobineProduction = lazy(() => import('./pages/BobineProduction'));
 const Tubes = lazy(() => import('./pages/Tubes'));
 const Rapports = lazy(() => import('./pages/Rapports'));
+const AdminSupervision = lazy(() => import('./pages/AdminSupervision'));
 
 // Spinner de chargement pour Suspense
 const PageLoader = () => (
@@ -58,6 +59,7 @@ function App() {
                           <Route path="/bobines-production" element={<BobineProduction />} />
                           <Route path="/tubes" element={<Tubes />} />
                           <Route path="/rapports" element={<Rapports />} />
+                          <Route path="/supervision" element={<AdminSupervision />} />
                           <Route path="/settings" element={<Settings />} />
                         </Routes>
                       </Suspense>

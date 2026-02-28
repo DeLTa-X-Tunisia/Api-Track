@@ -16,6 +16,9 @@ class SocketService {
       this.socket.disconnect();
     }
 
+    // Send auth token with socket connection
+    const token = localStorage.getItem('logitrack2_token');
+
     this.socket = io(SOCKET_URL, {
       transports: ['polling', 'websocket'],
       autoConnect: true,
@@ -23,12 +26,18 @@ class SocketService {
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      upgrade: true
+      upgrade: true,
+      auth: { token: token || undefined }
     });
 
     this.socket.on('connect', () => {
       console.log('🔌 Socket.io connecté:', this.socket.id);
       this.connected = true;
+      // Re-register auth on reconnect
+      const currentToken = localStorage.getItem('logitrack2_token');
+      if (currentToken) {
+        this.socket.emit('auth:register', { token: currentToken });
+      }
     });
 
     this.socket.on('disconnect', () => {
@@ -46,6 +55,13 @@ class SocketService {
       this.socket.disconnect();
       this.socket = null;
       this.connected = false;
+    }
+  }
+
+  // Re-authenticate (e.g. after login)
+  registerAuth(token) {
+    if (this.socket?.connected && token) {
+      this.socket.emit('auth:register', { token });
     }
   }
 
@@ -68,6 +84,11 @@ class SocketService {
     if (this.socket?.connected) {
       this.socket.emit(event, data);
     }
+  }
+
+  // Get socket id
+  getSocketId() {
+    return this.socket?.id || null;
   }
 }
 
