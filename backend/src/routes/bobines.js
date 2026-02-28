@@ -197,10 +197,34 @@ router.put('/:id', requireSupervisor, bobineValidation, async (req, res) => {
 
 /**
  * DELETE /api/bobines/:id - Supprimer une bobine
+ * ⚠️ Interdit si la bobine est en production ou épuisée (traçabilité)
  */
 router.delete('/:id', requireSupervisor, async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Vérifier le statut de la bobine avant suppression
+    const [bobine] = await pool.query('SELECT numero, statut FROM bobines WHERE id = ?', [id]);
+    if (bobine.length === 0) {
+      return res.status(404).json({ error: 'Bobine non trouvée' });
+    }
+
+    const { numero, statut } = bobine[0];
+
+    // Bloquer la suppression si en production ou épuisée
+    if (statut === 'en_cours') {
+      return res.status(403).json({ 
+        error: `Suppression interdite : la bobine ${numero} est actuellement en production`,
+        code: 'BOBINE_EN_PRODUCTION'
+      });
+    }
+
+    if (statut === 'epuisee') {
+      return res.status(403).json({ 
+        error: `Suppression interdite : la bobine ${numero} est épuisée et fait partie de l'historique de production`,
+        code: 'BOBINE_EPUISEE'
+      });
+    }
 
     // Supprimer les photos physiques
     const [photos] = await pool.query('SELECT filename FROM bobine_photos WHERE bobine_id = ?', [id]);

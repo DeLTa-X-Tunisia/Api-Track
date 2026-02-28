@@ -337,13 +337,19 @@ router.post('/', canAct, async (req, res) => {
     let lot_id_2 = null;
     if (type_tube === 'cross_welding') {
       const [lots] = await conn.query(
-        "SELECT id FROM lots WHERE statut = 'en_production' AND id != ? ORDER BY created_at ASC LIMIT 1",
+        "SELECT id, bobine_id FROM lots WHERE statut = 'en_production' AND id != ? ORDER BY created_at ASC LIMIT 1",
         [lot_id]
       );
       if (lots.length > 0) {
         lot_id_2 = lots[0].id;
-        // Clôturer le premier lot
-        await conn.query("UPDATE lots SET statut = 'termine' WHERE id = ?", [lot_id]);
+        // Clôturer le premier lot et mettre la bobine en épuisée
+        await conn.query("UPDATE lots SET statut = 'termine', date_fin = NOW() WHERE id = ?", [lot_id]);
+        
+        // Mettre la bobine du lot clôturé en "epuisee"
+        const [lotInfo] = await conn.query("SELECT bobine_id FROM lots WHERE id = ?", [lot_id]);
+        if (lotInfo.length > 0 && lotInfo[0].bobine_id) {
+          await conn.query("UPDATE bobines SET statut = 'epuisee' WHERE id = ?", [lotInfo[0].bobine_id]);
+        }
       }
     }
 
@@ -504,7 +510,7 @@ router.put('/:id/resoudre-nc', canAct, async (req, res) => {
     const { etape_numero, action, commentaire } = req.body;
 
     if (action === 'rebut') {
-      await pool.query("UPDATE tubes SET statut = 'rebut' WHERE id = ?", [id]);
+      await pool.query("UPDATE tubes SET statut = 'rebut', decision = 'rebut' WHERE id = ?", [id]);
       await pool.query(`UPDATE tube_etapes SET commentaire = CONCAT(IFNULL(commentaire,''), ' | REBUT: ', ?) WHERE tube_id = ? AND etape_numero = ?`, [commentaire || 'Décision rebut', id, etape_numero]);
       await logEtapeHistorique(id, etape_numero, 'rebut', commentaire || 'Décision rebut', req);
 
@@ -655,7 +661,7 @@ router.put('/:id/resoudre-reparation', canAct, async (req, res) => {
       }
 
     } else if (action === 'rebut') {
-      await pool.query("UPDATE tubes SET statut = 'rebut' WHERE id = ?", [id]);
+      await pool.query("UPDATE tubes SET statut = 'rebut', decision = 'rebut' WHERE id = ?", [id]);
       await pool.query(`UPDATE tube_etapes SET commentaire = CONCAT(IFNULL(commentaire,''), ' | REBUT RÉPARATION: ', ?) WHERE tube_id = ? AND etape_numero = ?`, [commentaire || 'Rebuté après réparation', id, etape_numero]);
       await logEtapeHistorique(id, etape_numero, 'reparation_rebut', commentaire || 'Rebuté après réparation', req);
 

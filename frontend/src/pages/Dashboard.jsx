@@ -111,8 +111,8 @@ export default function Dashboard() {
   const bobines = data?.bobines || {};
   const activite = data?.activite_recente || [];
 
-  const tauxRebut = (tubes.termines + tubes.rebuts) > 0
-    ? ((tubes.rebuts / (tubes.termines + tubes.rebuts)) * 100).toFixed(1)
+  const tauxRebut = tubes.total > 0
+    ? ((tubes.rebuts / tubes.total) * 100).toFixed(1)
     : '0.0';
 
   return (

@@ -308,6 +308,14 @@ setInterval(() => {
 // Servir le frontend (build) en production
 const frontendDist = path.join(__dirname, '../../frontend/dist');
 if (fs.existsSync(frontendDist)) {
+  // Route spéciale pour og.png - permet aux crawlers de récupérer l'image
+  app.get('/og.png', (req, res) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.sendFile(path.join(frontendDist, 'og.png'));
+  });
+  
   app.use(express.static(frontendDist));
   app.get('*', (req, res) => {
     if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) {

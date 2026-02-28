@@ -15,14 +15,15 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 // COMPOSANT PRINCIPAL
 // ============================================
 export default function SettingsPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isSystemAdmin } = useAuth();
   const toast = useToast();
 
   const [settings, setSettings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({});
-  const [activeSection, setActiveSection] = useState('project');
+  // Section par défaut : 'project' si System Admin, sinon 'responsabilites'
+  const [activeSection, setActiveSection] = useState(isSystemAdmin ? 'project' : 'responsabilites');
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -67,11 +68,14 @@ export default function SettingsPage() {
   };
 
   // Section definitions - extensible
-  const sections = [
-    { id: 'project', label: 'Paramètres du projet', icon: Building2, color: 'blue' },
-    { id: 'responsabilites', label: 'Resp. Réparation', icon: Shield, color: 'orange' },
-    { id: 'mobile', label: 'Application Mobile', icon: Smartphone, color: 'green' },
+  // ⚠️ "Paramètres du projet" visible uniquement par System Admin
+  const allSections = [
+    { id: 'project', label: 'Paramètres du projet', icon: Building2, color: 'blue', systemAdminOnly: true },
+    { id: 'responsabilites', label: 'Resp. Réparation', icon: Shield, color: 'orange', systemAdminOnly: false },
+    { id: 'mobile', label: 'Application Mobile', icon: Smartphone, color: 'green', systemAdminOnly: false },
   ];
+  
+  const sections = allSections.filter(s => !s.systemAdminOnly || isSystemAdmin);
 
   return (
     <div className="space-y-6 animate-fadeIn">
