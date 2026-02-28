@@ -237,21 +237,24 @@ router.get('/tubes/:id', async (req, res) => {
 
     // Récupérer les étapes du tube
     const [etapes] = await pool.execute(
-      `SELECT te.*, e.nom as etape_nom, e.code as etape_code
+      `SELECT te.id, te.tube_id, te.etape_numero, te.etape_code, te.etape_code as etape_nom,
+              te.statut, te.operateur_nom, te.operateur_prenom,
+              te.started_at as date_debut, te.completed_at as date_fin,
+              te.created_at
        FROM tube_etapes te
-       JOIN etapes e ON te.etape_id = e.id
        WHERE te.tube_id = ?
-       ORDER BY te.date_debut`,
+       ORDER BY te.etape_numero`,
       [req.params.id]
     );
 
     // Récupérer l'historique
     const [historique] = await pool.execute(
-      `SELECT teh.*, e.nom as etape_nom, e.code as etape_code
+      `SELECT teh.id, teh.tube_id, teh.etape_numero, teh.etape_code, teh.etape_code as etape_nom,
+              teh.type_action, teh.operateur_nom, teh.operateur_prenom,
+              teh.created_at as date_entree, teh.created_at as date_sortie
        FROM tube_etape_historique teh
-       JOIN etapes e ON teh.etape_id = e.id
        WHERE teh.tube_id = ?
-       ORDER BY teh.date_entree`,
+       ORDER BY teh.created_at`,
       [req.params.id]
     );
 
@@ -341,10 +344,9 @@ router.put('/tube-etapes/:id/dates', async (req, res) => {
 
     // Récupérer l'ancienne valeur avec infos tube
     const [oldData] = await connection.execute(
-      `SELECT te.*, t.numero as tube_numero, e.nom as etape_nom
+      `SELECT te.*, t.numero as tube_numero, te.etape_code as etape_nom
        FROM tube_etapes te
        JOIN tubes t ON te.tube_id = t.id
-       JOIN etapes e ON te.etape_id = e.id
        WHERE te.id = ?`,
       [etapeId]
     );
@@ -359,30 +361,30 @@ router.put('/tube-etapes/:id/dates', async (req, res) => {
 
     // Mettre à jour
     await connection.execute(
-      'UPDATE tube_etapes SET date_debut = ?, date_fin = ? WHERE id = ?',
+      'UPDATE tube_etapes SET started_at = ?, completed_at = ? WHERE id = ?',
       [date_debut, date_fin || null, etapeId]
     );
 
     // Logger les corrections
     const formatDate = (d) => d ? d.toISOString() : null;
 
-    if (date_debut && formatDate(oldEtape.date_debut) !== date_debut) {
+    if (date_debut && formatDate(oldEtape.started_at) !== date_debut) {
       await connection.execute(
         `INSERT INTO admin_corrections_log 
          (table_modifiee, enregistrement_id, enregistrement_ref, champ_modifie, ancienne_valeur, nouvelle_valeur, motif, admin_id, admin_nom, admin_prenom)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['tube_etapes', etapeId, ref, 'date_debut',
-         formatDate(oldEtape.date_debut), date_debut, motif, req.user.id, req.user.nom, req.user.prenom]
+        ['tube_etapes', etapeId, ref, 'started_at',
+         formatDate(oldEtape.started_at), date_debut, motif, req.user.id, req.user.nom, req.user.prenom]
       );
     }
 
-    if (formatDate(oldEtape.date_fin) !== (date_fin || null)) {
+    if (formatDate(oldEtape.completed_at) !== (date_fin || null)) {
       await connection.execute(
         `INSERT INTO admin_corrections_log 
          (table_modifiee, enregistrement_id, enregistrement_ref, champ_modifie, ancienne_valeur, nouvelle_valeur, motif, admin_id, admin_nom, admin_prenom)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['tube_etapes', etapeId, ref, 'date_fin',
-         formatDate(oldEtape.date_fin), date_fin || null, motif, req.user.id, req.user.nom, req.user.prenom]
+        ['tube_etapes', etapeId, ref, 'completed_at',
+         formatDate(oldEtape.completed_at), date_fin || null, motif, req.user.id, req.user.nom, req.user.prenom]
       );
     }
 
@@ -410,10 +412,9 @@ router.put('/tube-historique/:id/dates', async (req, res) => {
 
     // Récupérer l'ancienne valeur
     const [oldData] = await connection.execute(
-      `SELECT teh.*, t.numero as tube_numero, e.nom as etape_nom
+      `SELECT teh.*, t.numero as tube_numero, teh.etape_code as etape_nom
        FROM tube_etape_historique teh
        JOIN tubes t ON teh.tube_id = t.id
-       JOIN etapes e ON teh.etape_id = e.id
        WHERE teh.id = ?`,
       [histId]
     );
@@ -426,32 +427,22 @@ router.put('/tube-historique/:id/dates', async (req, res) => {
     const oldHist = oldData[0];
     const ref = `${oldHist.tube_numero} - ${oldHist.etape_nom}`;
 
-    // Mettre à jour
+    // Mettre à jour (seul created_at est modifiable dans l'historique)
     await connection.execute(
-      'UPDATE tube_etape_historique SET date_entree = ?, date_sortie = ? WHERE id = ?',
-      [date_entree, date_sortie || null, histId]
+      'UPDATE tube_etape_historique SET created_at = ? WHERE id = ?',
+      [date_entree, histId]
     );
 
     // Logger les corrections
     const formatDate = (d) => d ? d.toISOString() : null;
 
-    if (date_entree && formatDate(oldHist.date_entree) !== date_entree) {
+    if (date_entree && formatDate(oldHist.created_at) !== date_entree) {
       await connection.execute(
         `INSERT INTO admin_corrections_log 
          (table_modifiee, enregistrement_id, enregistrement_ref, champ_modifie, ancienne_valeur, nouvelle_valeur, motif, admin_id, admin_nom, admin_prenom)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['tube_etape_historique', histId, ref, 'date_entree',
-         formatDate(oldHist.date_entree), date_entree, motif, req.user.id, req.user.nom, req.user.prenom]
-      );
-    }
-
-    if (formatDate(oldHist.date_sortie) !== (date_sortie || null)) {
-      await connection.execute(
-        `INSERT INTO admin_corrections_log 
-         (table_modifiee, enregistrement_id, enregistrement_ref, champ_modifie, ancienne_valeur, nouvelle_valeur, motif, admin_id, admin_nom, admin_prenom)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['tube_etape_historique', histId, ref, 'date_sortie',
-         formatDate(oldHist.date_sortie), date_sortie || null, motif, req.user.id, req.user.nom, req.user.prenom]
+        ['tube_etape_historique', histId, ref, 'created_at',
+         formatDate(oldHist.created_at), date_entree, motif, req.user.id, req.user.nom, req.user.prenom]
       );
     }
 
