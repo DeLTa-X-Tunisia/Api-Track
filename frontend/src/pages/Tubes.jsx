@@ -14,6 +14,14 @@ import {
   PauseCircle, PlayCircle, WifiOff, History, Trophy, ShieldCheck, Undo2
 } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
+/** Build a photo URL with auth token for <img> tags */
+const getPhotoUrl = (photoPath) => {
+  const token = localStorage.getItem('logitrack2_token');
+  return `${API_URL}${photoPath}${token ? `?token=${token}` : ''}`;
+};
+
 // ============================================
 // CONSTANTES
 // ============================================
@@ -1732,10 +1740,10 @@ function TubeDetailModal({ tube, onClose, onRefresh, canAct, isSystemAdmin }) {
                           <div
                             key={pi}
                             className="relative group cursor-pointer"
-                            onClick={() => setPhotoViewer({ src: p.path, alt: p.original_name })}
+                            onClick={() => setPhotoViewer({ src: getPhotoUrl(p.path), alt: p.original_name })}
                           >
                             <img
-                              src={p.path}
+                              src={getPhotoUrl(p.path)}
                               alt={p.original_name || `Photo ${pi + 1}`}
                               className="w-14 h-14 object-cover rounded-lg border border-gray-200"
                             />
