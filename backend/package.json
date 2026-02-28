@@ -1,6 +1,6 @@
 {
   "name": "logitrack2-backend",
-  "version": "2.0.0",
+  "version": "2.5.0",
   "description": "Backend API pour Logi-Track V2",
   "main": "src/server.js",
   "scripts": {

@@ -16,14 +16,6 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Current Database: `logitrack2`
---
-
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `logitrack2` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-
-USE `logitrack2`;
-
---
 -- Table structure for table `bobine_photos`
 --
 
@@ -58,7 +50,7 @@ CREATE TABLE `bobines` (
   `numero` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Code bobine unique',
   `norme` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'API 5L' COMMENT 'Norme (API 5L, API 5CT, etc.)',
   `grade` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Grade / nuance acier',
-  `epaisseur` decimal(10,2) NOT NULL COMMENT 'Épaisseur en mm',
+  `epaisseur` decimal(10,2) NOT NULL COMMENT '├ëpaisseur en mm',
   `largeur` decimal(10,2) DEFAULT NULL COMMENT 'Largeur en mm',
   `poids` decimal(12,2) DEFAULT NULL COMMENT 'Poids en kg',
   `fournisseur` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -88,8 +80,8 @@ DROP TABLE IF EXISTS `diametres_tubes`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `diametres_tubes` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `pouce` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Diamètre en pouces (ex: 36)',
-  `mm` decimal(10,1) NOT NULL COMMENT 'Diamètre en mm (ex: 914.4)',
+  `pouce` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Diam├¿tre en pouces (ex: 36)',
+  `mm` decimal(10,1) NOT NULL COMMENT 'Diam├¿tre en mm (ex: 914.4)',
   `actif` tinyint(1) DEFAULT '1',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
@@ -186,7 +178,7 @@ CREATE TABLE `grades` (
   `id` int NOT NULL AUTO_INCREMENT,
   `code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Ex: X42, X52, X65',
   `nom` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Nom complet',
-  `norme` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'API 5L' COMMENT 'Norme associée',
+  `norme` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'API 5L' COMMENT 'Norme associ├®e',
   `limite_elastique_min` decimal(10,2) DEFAULT NULL COMMENT 'MPa',
   `resistance_traction_min` decimal(10,2) DEFAULT NULL COMMENT 'MPa',
   `actif` tinyint(1) DEFAULT '1',
@@ -207,7 +199,7 @@ CREATE TABLE `lots` (
   `id` int NOT NULL AUTO_INCREMENT,
   `numero` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `bobine_id` int DEFAULT NULL,
-  `parametre_id` int DEFAULT NULL COMMENT 'Référence vers presets_soudure',
+  `parametre_id` int DEFAULT NULL COMMENT 'R├®f├®rence vers presets_soudure',
   `equipe_id` int DEFAULT NULL,
   `statut` enum('en_cours','pret_production','en_production','termine','annule') COLLATE utf8mb4_unicode_ci DEFAULT 'en_cours',
   `bobine_recue` tinyint(1) DEFAULT '0',
@@ -305,12 +297,12 @@ DROP TABLE IF EXISTS `preset_soudure_heads`;
 CREATE TABLE `preset_soudure_heads` (
   `id` int NOT NULL AUTO_INCREMENT,
   `preset_id` int NOT NULL,
-  `type` enum('ID','OD') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ID = intérieur, OD = extérieur',
-  `numero` int NOT NULL COMMENT 'Numéro de tête (1, 2, 3)',
+  `type` enum('ID','OD') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ID = int├®rieur, OD = ext├®rieur',
+  `numero` int NOT NULL COMMENT 'Num├®ro de t├¬te (1, 2, 3)',
   `actif` tinyint(1) DEFAULT '0' COMMENT '1 = active, 0 = inactive',
-  `amperage` decimal(8,1) DEFAULT '0.0' COMMENT 'Ampérage par tête',
-  `voltage` decimal(8,1) DEFAULT '0.0' COMMENT 'Voltage par tête',
-  `type_fil` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT '3.2mm' COMMENT 'Type de fil par tête',
+  `amperage` decimal(8,1) DEFAULT '0.0' COMMENT 'Amp├®rage par t├¬te',
+  `voltage` decimal(8,1) DEFAULT '0.0' COMMENT 'Voltage par t├¬te',
+  `type_fil` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT '3.2mm' COMMENT 'Type de fil par t├¬te',
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_head` (`preset_id`,`type`,`numero`),
   CONSTRAINT `preset_soudure_heads_ibfk_1` FOREIGN KEY (`preset_id`) REFERENCES `presets_soudure` (`id`) ON DELETE CASCADE
@@ -326,35 +318,35 @@ DROP TABLE IF EXISTS `presets_soudure`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `presets_soudure` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Code preset auto-généré (PAR-36-1)',
-  `diametre_pouce` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Diamètre en pouces',
-  `diametre_mm` decimal(10,1) NOT NULL COMMENT 'Diamètre en mm',
-  `lot` int DEFAULT NULL COMMENT 'Numéro de lot (optionnel)',
-  `strip_vitesse_m` int NOT NULL DEFAULT '0' COMMENT 'Strip: vitesse mètres',
-  `strip_vitesse_cm` int NOT NULL DEFAULT '0' COMMENT 'Strip: vitesse centimètres',
-  `milling_angle1` decimal(5,1) NOT NULL DEFAULT '0.0' COMMENT 'Milling: angle 1 en degrés',
-  `milling_angle2` decimal(5,1) NOT NULL DEFAULT '0.0' COMMENT 'Milling: angle 2 en degrés',
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Code preset auto-g├®n├®r├® (PAR-36-1)',
+  `diametre_pouce` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Diam├¿tre en pouces',
+  `diametre_mm` decimal(10,1) NOT NULL COMMENT 'Diam├¿tre en mm',
+  `lot` int DEFAULT NULL COMMENT 'Num├®ro de lot (optionnel)',
+  `strip_vitesse_m` int NOT NULL DEFAULT '0' COMMENT 'Strip: vitesse m├¿tres',
+  `strip_vitesse_cm` int NOT NULL DEFAULT '0' COMMENT 'Strip: vitesse centim├¿tres',
+  `milling_angle1` decimal(5,1) NOT NULL DEFAULT '0.0' COMMENT 'Milling: angle 1 en degr├®s',
+  `milling_angle2` decimal(5,1) NOT NULL DEFAULT '0.0' COMMENT 'Milling: angle 2 en degr├®s',
   `pression_rouleaux` decimal(10,2) DEFAULT NULL COMMENT 'Pression rouleaux',
-  `pression_unite` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Tonnes' COMMENT 'Unité pression',
-  `tack_amperage` decimal(6,1) NOT NULL DEFAULT '0.0' COMMENT 'Tack: ampérage (A)',
+  `pression_unite` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'Tonnes' COMMENT 'Unit├® pression',
+  `tack_amperage` decimal(6,1) NOT NULL DEFAULT '0.0' COMMENT 'Tack: amp├®rage (A)',
   `tack_voltage` decimal(5,1) NOT NULL DEFAULT '0.0' COMMENT 'Tack: voltage (V)',
-  `tack_vitesse_m` int NOT NULL DEFAULT '0' COMMENT 'Tack: vitesse mètres',
+  `tack_vitesse_m` int NOT NULL DEFAULT '0' COMMENT 'Tack: vitesse m├¿tres',
   `tack_vitesse_cm` int NOT NULL DEFAULT '0' COMMENT 'Tack: vitesse cm',
-  `tack_frequence_hf` decimal(10,2) DEFAULT NULL COMMENT 'Tack: fréquence HF (Hz)',
-  `tack_type_gaz` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT 'CO₂' COMMENT 'Tack: type de gaz',
-  `tack_debit_gaz` decimal(10,2) DEFAULT NULL COMMENT 'Tack: débit gaz (L/min)',
-  `soudure_vitesse_m` int NOT NULL DEFAULT '0' COMMENT 'Soudure: vitesse mètres',
-  `soudure_vitesse_cm` int NOT NULL DEFAULT '0' COMMENT 'Soudure: vitesse centimètres',
+  `tack_frequence_hf` decimal(10,2) DEFAULT NULL COMMENT 'Tack: fr├®quence HF (Hz)',
+  `tack_type_gaz` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT 'COÔéé' COMMENT 'Tack: type de gaz',
+  `tack_debit_gaz` decimal(10,2) DEFAULT NULL COMMENT 'Tack: d├®bit gaz (L/min)',
+  `soudure_vitesse_m` int NOT NULL DEFAULT '0' COMMENT 'Soudure: vitesse m├¿tres',
+  `soudure_vitesse_cm` int NOT NULL DEFAULT '0' COMMENT 'Soudure: vitesse centim├¿tres',
   `soudure_type_fil` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT '1.6mm' COMMENT 'Type de fil soudure finale',
   `soudure_type_flux` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT 'SAW' COMMENT 'Type de flux soudure',
-  `finale_amperage` decimal(6,1) NOT NULL DEFAULT '0.0' COMMENT 'Soudure finale: ampérage',
+  `finale_amperage` decimal(6,1) NOT NULL DEFAULT '0.0' COMMENT 'Soudure finale: amp├®rage',
   `finale_voltage` decimal(5,1) NOT NULL DEFAULT '0.0' COMMENT 'Soudure finale: voltage',
-  `finale_frequence_hf` decimal(10,2) DEFAULT NULL COMMENT 'Soudure finale: fréquence HF',
-  `finale_type_gaz` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT 'CO₂' COMMENT 'Soudure finale: type gaz',
-  `finale_debit_gaz` decimal(10,2) DEFAULT NULL COMMENT 'Soudure finale: débit gaz',
-  `nb_tetes` int NOT NULL DEFAULT '5' COMMENT 'Nombre total de têtes',
-  `tetes_config` json DEFAULT NULL COMMENT 'Config têtes [true,true,true,true,false]',
-  `copie_de` int DEFAULT NULL COMMENT 'ID du preset source si copié',
+  `finale_frequence_hf` decimal(10,2) DEFAULT NULL COMMENT 'Soudure finale: fr├®quence HF',
+  `finale_type_gaz` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT 'COÔéé' COMMENT 'Soudure finale: type gaz',
+  `finale_debit_gaz` decimal(10,2) DEFAULT NULL COMMENT 'Soudure finale: d├®bit gaz',
+  `nb_tetes` int NOT NULL DEFAULT '5' COMMENT 'Nombre total de t├¬tes',
+  `tetes_config` json DEFAULT NULL COMMENT 'Config t├¬tes [true,true,true,true,false]',
+  `copie_de` int DEFAULT NULL COMMENT 'ID du preset source si copi├®',
   `notes` text COLLATE utf8mb4_unicode_ci,
   `created_by` int DEFAULT NULL,
   `createur_nom` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -390,7 +382,7 @@ CREATE TABLE `project_settings` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `setting_key` (`setting_key`)
-) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=119 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -483,7 +475,7 @@ CREATE TABLE `tube_etape_historique` (
   KEY `idx_tube_historique_tube` (`tube_id`),
   KEY `idx_tube_historique_etape` (`tube_id`,`etape_numero`),
   CONSTRAINT `tube_etape_historique_ibfk_1` FOREIGN KEY (`tube_id`) REFERENCES `tubes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -508,7 +500,7 @@ CREATE TABLE `tube_etape_photos` (
   PRIMARY KEY (`id`),
   KEY `tube_id` (`tube_id`),
   CONSTRAINT `tube_etape_photos_ibfk_1` FOREIGN KEY (`tube_id`) REFERENCES `tubes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -620,17 +612,13 @@ CREATE TABLE `zones_travail` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nom` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
-  `couleur` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'blue' COMMENT 'Clé couleur Tailwind: red, blue, green, orange, violet, cyan, rose, amber, indigo, emerald',
+  `couleur` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'blue' COMMENT 'Cl├® couleur Tailwind: red, blue, green, orange, violet, cyan, rose, amber, indigo, emerald',
   `actif` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_nom` (`nom`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping events for database 'logitrack2'
---
 
 --
 -- Dumping routines for database 'logitrack2'
@@ -645,4 +633,4 @@ CREATE TABLE `zones_travail` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-27 23:00:46
+-- Dump completed on 2026-02-28 11:54:55
