@@ -216,8 +216,8 @@ export default function Login() {
 
       {/* Footer */}
       <footer className="py-3 sm:py-4 text-center relative z-10 safe-area-bottom">
-        <p className="text-primary-200 text-xs sm:text-sm flex items-center justify-center gap-1 flex-wrap">
-          <img src="https://flagcdn.com/w40/tn.png" alt="🇹🇳" className="inline h-5 w-auto rounded-sm" /> ❤️ <span className="font-bold text-white">Azizi Mounir</span> ❤️ <img src="https://flagcdn.com/w40/tn.png" alt="🇹🇳" className="inline h-5 w-auto rounded-sm" />
+        <p className="text-xs sm:text-sm tracking-wide">
+          <span className="font-bold bg-gradient-to-r from-blue-300 to-indigo-300 bg-clip-text text-transparent">Azizi Mounir</span>
         </p>
       </footer>
     </div>

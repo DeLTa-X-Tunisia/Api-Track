@@ -543,8 +543,8 @@ export default function Layout({ children }) {
         {/* Footer */}
         <footer className="border-t border-gray-200 bg-white px-4 sm:px-6 py-3 safe-area-bottom">
           <div className="flex items-center justify-center">
-            <p className="text-xs text-gray-400 flex items-center gap-1 flex-wrap justify-center">
-              <img src="https://flagcdn.com/w40/tn.png" alt="🇹🇳" className="inline h-5 w-auto rounded-sm" /> ❤️ <span className="font-bold text-primary-600">Azizi Mounir</span> ❤️ <img src="https://flagcdn.com/w40/tn.png" alt="🇹🇳" className="inline h-5 w-auto rounded-sm" />
+            <p className="text-xs text-gray-400 tracking-wide">
+              <span className="font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Azizi Mounir</span>
             </p>
           </div>
         </footer>
