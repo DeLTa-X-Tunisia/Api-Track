@@ -137,7 +137,7 @@ router.put('/bobines/:id/dates', async (req, res) => {
 router.get('/lots/:id', async (req, res) => {
   try {
     const [lots] = await pool.execute(
-      `SELECT l.*, b.numero as bobine_numero 
+      `SELECT l.*, l.created_at as date_creation, b.numero as bobine_numero 
        FROM lots l 
        LEFT JOIN bobines b ON l.bobine_id = b.id
        WHERE l.id = ?`,
@@ -223,7 +223,8 @@ router.put('/lots/:id/dates', async (req, res) => {
 router.get('/tubes/:id', async (req, res) => {
   try {
     const [tubes] = await pool.execute(
-      `SELECT t.*, l.numero as lot_numero, b.numero as bobine_numero 
+      `SELECT t.*, t.created_at as date_creation, t.date_fin_production as date_fin,
+              l.numero as lot_numero, b.numero as bobine_numero 
        FROM tubes t 
        LEFT JOIN lots l ON t.lot_id = l.id
        LEFT JOIN bobines b ON l.bobine_id = b.id
@@ -463,7 +464,9 @@ router.put('/tube-historique/:id/dates', async (req, res) => {
 router.get('/corrections-log', async (req, res) => {
   try {
     const { page = 1, limit = 50, table_modifiee } = req.query;
-    const offset = (page - 1) * limit;
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 50;
+    const offset = (pageNum - 1) * limitNum;
 
     let query = `
       SELECT * FROM admin_corrections_log 
@@ -476,8 +479,8 @@ router.get('/corrections-log', async (req, res) => {
       params.push(table_modifiee);
     }
 
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), parseInt(offset));
+    // LIMIT et OFFSET doivent être intégrés directement dans la query pour mysql2
+    query += ` ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offset}`;
 
     const [logs] = await pool.execute(query, params);
 
@@ -493,8 +496,8 @@ router.get('/corrections-log', async (req, res) => {
     res.json({
       logs,
       total: countResult[0].total,
-      page: parseInt(page),
-      totalPages: Math.ceil(countResult[0].total / limit)
+      page: pageNum,
+      totalPages: Math.ceil(countResult[0].total / limitNum)
     });
   } catch (error) {
     console.error('Erreur get corrections log:', error);
