@@ -420,17 +420,17 @@ export default function AdminSupervision() {
       {/* Sent messages log */}
       {sentMessages.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Send className="w-5 h-5 text-blue-500" />
-              Messages envoyés
-              <span className="text-sm font-normal text-gray-400">({sentMessages.length})</span>
+          <div className="flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 border-b border-gray-100">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <Send className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
+              <span>Messages envoyés</span>
+              <span className="text-xs sm:text-sm font-normal text-gray-400">({sentMessages.length})</span>
             </h2>
             <button
               onClick={() => setSentMessages([])}
-              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-xs text-gray-400 hover:text-gray-600 active:text-gray-700 transition-colors whitespace-nowrap ml-2"
             >
-              Effacer l'historique
+              Effacer tout
             </button>
           </div>
           <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
@@ -438,23 +438,25 @@ export default function AdminSupervision() {
               const typeConf = MESSAGE_TYPES.find(t => t.value === msg.type) || MESSAGE_TYPES[0];
               const TypeIcon = typeConf.icon;
               return (
-                <div key={msg.id || idx} className="px-5 py-3 flex items-start gap-3 hover:bg-gray-50 group">
+                <div key={msg.id || idx} className="px-3 sm:px-5 py-3 flex items-start gap-2 sm:gap-3 hover:bg-gray-50 group">
                   <TypeIcon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${typeConf.color}`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-800">{msg.message}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      → {msg.targetName} • {formatTime(msg.timestamp)}
-                    </p>
+                    <p className="text-sm text-gray-800 break-words">{msg.message}</p>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                      <p className="text-xs text-gray-400">
+                        → {msg.targetName} • {formatTime(msg.timestamp)}
+                      </p>
+                      <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full border ${typeConf.bg}`}>
+                        {typeConf.label}
+                      </span>
+                    </div>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full border ${typeConf.bg}`}>
-                    {typeConf.label}
-                  </span>
                   <button
                     onClick={() => setSentMessages(prev => prev.filter((_, i) => i !== idx))}
                     title="Supprimer ce message"
-                    className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
+                    className="p-1.5 text-gray-400 sm:text-gray-300 hover:text-red-500 hover:bg-red-50 active:bg-red-100 rounded-lg transition-colors sm:opacity-0 sm:group-hover:opacity-100 flex-shrink-0"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                   </button>
                 </div>
               );
@@ -465,27 +467,27 @@ export default function AdminSupervision() {
 
       {/* Message Modal */}
       {messageModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMessageModal({ open: false, target: null })} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-fadeIn">
+          <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] flex flex-col animate-fadeIn">
             {/* Modal header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${messageModal.target ? 'bg-blue-100' : 'bg-gradient-to-br from-blue-500 to-indigo-500'}`}>
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className={`p-2 rounded-lg flex-shrink-0 ${messageModal.target ? 'bg-blue-100' : 'bg-gradient-to-br from-blue-500 to-indigo-500'}`}>
                   {messageModal.target ? (
                     <MessageSquare className="w-5 h-5 text-blue-600" />
                   ) : (
                     <Megaphone className="w-5 h-5 text-white" />
                   )}
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                <div className="min-w-0">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                     {messageModal.target ? 'Message privé' : 'Diffusion générale'}
                   </h3>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 truncate">
                     {messageModal.target 
                       ? `À : ${messageModal.target.prenom} ${messageModal.target.nom}` 
-                      : `À : Tous les utilisateurs connectés (${totalUsers})`
+                      : `À : Tous les connectés (${totalUsers})`
                     }
                   </p>
                 </div>
@@ -499,7 +501,7 @@ export default function AdminSupervision() {
             </div>
 
             {/* Modal body */}
-            <div className="px-6 py-4 space-y-4">
+            <div className="px-4 sm:px-6 py-4 space-y-4 overflow-y-auto flex-1">
               {/* Message type */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Type de message</label>
@@ -548,17 +550,17 @@ export default function AdminSupervision() {
             </div>
 
             {/* Modal footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+            <div className="flex items-center justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex-shrink-0">
               <button
                 onClick={() => setMessageModal({ open: false, target: null })}
-                className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                className="flex-1 sm:flex-initial px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors"
               >
                 Annuler
               </button>
               <button
                 onClick={handleSendMessage}
                 disabled={!messageText.trim() || sendingMessage}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="w-4 h-4" />
                 {sendingMessage ? 'Envoi...' : 'Envoyer'}

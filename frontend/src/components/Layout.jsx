@@ -106,9 +106,24 @@ export default function Layout({ children }) {
   // Admin notification & kicked listeners
   const [adminMessageModal, setAdminMessageModal] = useState(null);
   const notifAudioRef = useRef(null);
+  const audioUnlockedRef = useRef(false);
   useEffect(() => {
     notifAudioRef.current = new Audio('/message.mp3');
     notifAudioRef.current.volume = 0.7;
+    // Unlock audio on mobile: first user interaction enables playback
+    const unlockAudio = () => {
+      if (!audioUnlockedRef.current && notifAudioRef.current) {
+        const a = notifAudioRef.current;
+        a.muted = true;
+        a.play().then(() => { a.pause(); a.muted = false; a.currentTime = 0; audioUnlockedRef.current = true; }).catch(() => {});
+      }
+    };
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    document.addEventListener('click', unlockAudio, { once: true });
+    return () => {
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('click', unlockAudio);
+    };
   }, []);
   useEffect(() => {
     const playNotifSound = () => {
@@ -644,51 +659,51 @@ export default function Layout({ children }) {
 
         {/* Admin message modal */}
         {adminMessageModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <div className={`
-              relative bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fadeIn overflow-hidden
+              relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col animate-fadeIn overflow-hidden
               ${adminMessageModal.type === 'urgent' ? 'ring-2 ring-red-500' : 
                 adminMessageModal.type === 'warning' ? 'ring-2 ring-amber-400' : 'ring-2 ring-blue-400'}
             `}>
               {/* Colored header bar */}
-              <div className={`px-6 py-4 flex items-center gap-3 ${
+              <div className={`px-4 py-3 sm:px-6 sm:py-4 flex items-center gap-3 flex-shrink-0 ${
                 adminMessageModal.type === 'urgent' 
                   ? 'bg-gradient-to-r from-red-600 to-red-700' 
                   : adminMessageModal.type === 'warning'
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500'
                     : 'bg-gradient-to-r from-blue-600 to-indigo-600'
               }`}>
-                <div className="p-2 bg-white/20 rounded-lg">
+                <div className="p-1.5 sm:p-2 bg-white/20 rounded-lg flex-shrink-0">
                   {adminMessageModal.type === 'urgent' 
-                    ? <AlertCircle className="w-6 h-6 text-white" />
+                    ? <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     : adminMessageModal.type === 'warning'
-                      ? <AlertTriangle className="w-6 h-6 text-white" />
-                      : <Megaphone className="w-6 h-6 text-white" />
+                      ? <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      : <Megaphone className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   }
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">
+                <div className="min-w-0">
+                  <h3 className="text-base sm:text-lg font-bold text-white truncate">
                     {adminMessageModal.type === 'urgent' ? 'Message urgent' : 
-                     adminMessageModal.type === 'warning' ? 'Avertissement' : 'Message de l\'administrateur'}
+                     adminMessageModal.type === 'warning' ? 'Avertissement' : 'Message admin'}
                   </h3>
-                  <p className="text-sm text-white/80">Communication interne Logi-Track</p>
+                  <p className="text-xs sm:text-sm text-white/80 truncate">Communication interne Logi-Track</p>
                 </div>
               </div>
 
               {/* Message body */}
-              <div className="px-6 py-5">
-                <div className={`p-4 rounded-xl border ${
+              <div className="px-4 py-4 sm:px-6 sm:py-5 overflow-y-auto flex-1">
+                <div className={`p-3 sm:p-4 rounded-xl border ${
                   adminMessageModal.type === 'urgent' ? 'bg-red-50 border-red-100' :
                   adminMessageModal.type === 'warning' ? 'bg-amber-50 border-amber-100' :
                   'bg-blue-50 border-blue-100'
                 }`}>
-                  <p className="text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{adminMessageModal.message}</p>
+                  <p className="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap break-words">{adminMessageModal.message}</p>
                 </div>
-                <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
-                  <User className="w-3.5 h-3.5" />
-                  <span>De : <strong className="text-gray-600">{adminMessageModal.sender}</strong> ({adminMessageModal.senderRole})</span>
-                  <span className="mx-1">•</span>
+                <div className="mt-3 sm:mt-4 flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs text-gray-400">
+                  <User className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">De : <strong className="text-gray-600">{adminMessageModal.sender}</strong> ({adminMessageModal.senderRole})</span>
+                  <span className="mx-0.5 sm:mx-1">•</span>
                   <span>{adminMessageModal.timestamp ? new Date(adminMessageModal.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
                 </div>
                 {adminMessageModal.isKick && (
@@ -700,10 +715,10 @@ export default function Layout({ children }) {
 
               {/* Footer */}
               {!adminMessageModal.isKick && (
-                <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                <div className="px-4 py-3 sm:px-6 sm:py-4 border-t border-gray-100 bg-gray-50 flex justify-center sm:justify-end flex-shrink-0">
                   <button
                     onClick={() => setAdminMessageModal(null)}
-                    className={`px-6 py-2.5 text-sm font-semibold text-white rounded-xl shadow-sm transition-all ${
+                    className={`w-full sm:w-auto px-6 py-3 sm:py-2.5 text-sm font-semibold text-white rounded-xl shadow-sm transition-all active:scale-95 ${
                       adminMessageModal.type === 'urgent' 
                         ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800' 
                         : adminMessageModal.type === 'warning'
