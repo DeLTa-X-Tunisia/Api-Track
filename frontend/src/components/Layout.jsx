@@ -24,7 +24,9 @@ import {
   SlidersHorizontal,
   Play,
   Cylinder,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Smartphone,
+  Download
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -360,6 +362,28 @@ export default function Layout({ children }) {
             </>
           )}
         </nav>
+
+        {/* Mobile app download */}
+        <div className={`${sidebarCollapsed ? 'px-2' : 'px-3'} pb-2`}>
+          <a
+            href={`${API_URL.replace('/api', '')}/api/mobile/download`}
+            download="LogiTrack-V2.apk"
+            title={sidebarCollapsed ? 'Télécharger l\'app mobile' : ''}
+            className={`
+              flex items-center gap-3 rounded-xl transition-all duration-200 group
+              ${sidebarCollapsed ? 'justify-center p-3' : 'px-3 py-2.5'}
+              text-green-600 hover:bg-green-50 hover:text-green-700 border border-transparent hover:border-green-100
+            `}
+          >
+            <div className="relative flex-shrink-0">
+              <Smartphone className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <Download className="w-2.5 h-2.5 absolute -bottom-0.5 -right-0.5 text-green-500" />
+            </div>
+            {!sidebarCollapsed && (
+              <span className="text-sm font-medium truncate">App Mobile</span>
+            )}
+          </a>
+        </div>
 
         {/* Collapse toggle (desktop) */}
         <div className="hidden lg:flex items-center justify-center py-3 border-t border-gray-200">

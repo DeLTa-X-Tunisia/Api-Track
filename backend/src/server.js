@@ -96,6 +96,37 @@ app.use((req, res, next) => {
   next();
 });
 
+// Route de téléchargement APK mobile (publique)
+app.get('/api/mobile/download', (req, res) => {
+  const apkPath = path.join(__dirname, '../../app_down/app-release.apk');
+  if (!fs.existsSync(apkPath)) {
+    return res.status(404).json({ error: 'APK non disponible' });
+  }
+  const stat = fs.statSync(apkPath);
+  res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+  res.setHeader('Content-Disposition', 'attachment; filename="LogiTrack-V2.apk"');
+  res.setHeader('Content-Length', stat.size);
+  const stream = fs.createReadStream(apkPath);
+  stream.pipe(res);
+});
+
+// Info APK mobile (publique)
+app.get('/api/mobile/info', (req, res) => {
+  const apkPath = path.join(__dirname, '../../app_down/app-release.apk');
+  if (!fs.existsSync(apkPath)) {
+    return res.json({ available: false });
+  }
+  const stat = fs.statSync(apkPath);
+  res.json({
+    available: true,
+    fileName: 'LogiTrack-V2.apk',
+    size: stat.size,
+    sizeFormatted: (stat.size / (1024 * 1024)).toFixed(1) + ' MB',
+    lastModified: stat.mtime.toISOString(),
+    version: '2.1.0'
+  });
+});
+
 // Route de santé (publique)
 app.get('/api/health', async (req, res) => {
   let dbOk = false;

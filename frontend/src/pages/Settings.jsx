@@ -5,7 +5,8 @@ import { settingsApi, responsabilitesApi } from '../services/api';
 import {
   Settings, Building2, Upload, Trash2, Save, Image, 
   Hash, MapPin, User, CheckCircle, Loader2, Pencil, Eye,
-  Shield, Plus, X, GripVertical, AlertTriangle
+  Shield, Plus, X, GripVertical, AlertTriangle,
+  Smartphone, Download, ExternalLink, QrCode
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -69,6 +70,7 @@ export default function SettingsPage() {
   const sections = [
     { id: 'project', label: 'Paramètres du projet', icon: Building2, color: 'blue' },
     { id: 'responsabilites', label: 'Resp. Réparation', icon: Shield, color: 'orange' },
+    { id: 'mobile', label: 'Application Mobile', icon: Smartphone, color: 'green' },
   ];
 
   return (
@@ -258,7 +260,160 @@ export default function SettingsPage() {
             </div>
           ) : activeSection === 'responsabilites' ? (
             <ResponsabilitesManager isAdmin={isAdmin} />
+          ) : activeSection === 'mobile' ? (
+            <MobileAppDownload />
           ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// MOBILE APP DOWNLOAD COMPONENT
+// ============================================
+function MobileAppDownload() {
+  const [appInfo, setAppInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    const fetchInfo = async () => {
+      try {
+        const res = await fetch(`${API_URL.replace('/api', '')}/api/mobile/info`);
+        const data = await res.json();
+        setAppInfo(data);
+      } catch {
+        setAppInfo({ available: false });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInfo();
+  }, []);
+
+  const handleDownload = () => {
+    setDownloading(true);
+    const link = document.createElement('a');
+    link.href = `${API_URL.replace('/api', '')}/api/mobile/download`;
+    link.download = 'LogiTrack-V2.apk';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => setDownloading(false), 3000);
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Main download card */}
+      <div className="card overflow-hidden">
+        <div className="border-l-4 border-green-500">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
+              <Smartphone className="w-4.5 h-4.5 text-green-500" />
+              Application Mobile Logi-Track V2
+            </h3>
+          </div>
+          <div className="p-5">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 text-green-500 animate-spin" />
+              </div>
+            ) : !appInfo?.available ? (
+              <div className="text-center py-12 text-gray-400">
+                <Smartphone className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p className="text-sm font-medium">APK non disponible</p>
+                <p className="text-xs mt-1">Contactez l'administrateur pour obtenir l'application mobile.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Hero section */}
+                <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-2xl border border-green-100">
+                  <div className="flex-shrink-0">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-200">
+                      <Smartphone className="w-10 h-10 text-white" />
+                    </div>
+                  </div>
+                  <div className="flex-1 text-center sm:text-left">
+                    <h4 className="text-lg font-bold text-gray-800">Logi-Track V2 Mobile</h4>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Accédez à toutes les fonctionnalités de Logi-Track directement depuis votre appareil Android.
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-3">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                        v{appInfo.version}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                        {appInfo.sizeFormatted}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">
+                        Android
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <button
+                      onClick={handleDownload}
+                      disabled={downloading}
+                      className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg shadow-green-200 hover:shadow-xl hover:shadow-green-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
+                    >
+                      {downloading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Download className="w-5 h-5" />
+                      )}
+                      {downloading ? 'Téléchargement...' : 'Télécharger l\'APK'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Instructions */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 bg-white border border-gray-100 rounded-xl text-center">
+                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+                      <span className="text-sm font-bold text-green-600">1</span>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-800">Télécharger</p>
+                    <p className="text-xs text-gray-500 mt-1">Cliquez sur le bouton ci-dessus pour télécharger le fichier APK.</p>
+                  </div>
+                  <div className="p-4 bg-white border border-gray-100 rounded-xl text-center">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
+                      <span className="text-sm font-bold text-blue-600">2</span>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-800">Autoriser</p>
+                    <p className="text-xs text-gray-500 mt-1">Activez "Sources inconnues" dans les paramètres de votre appareil.</p>
+                  </div>
+                  <div className="p-4 bg-white border border-gray-100 rounded-xl text-center">
+                    <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center mx-auto mb-3">
+                      <span className="text-sm font-bold text-violet-600">3</span>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-800">Installer</p>
+                    <p className="text-xs text-gray-500 mt-1">Ouvrez le fichier APK téléchargé et suivez les instructions.</p>
+                  </div>
+                </div>
+
+                {/* Features list */}
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Fonctionnalités incluses</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {[
+                      'Accès complet à tous les modules',
+                      'Prise de photo intégrée (caméra)',
+                      'Téléchargement PDF & Excel',
+                      'Découverte automatique du serveur',
+                      'Mode plein écran immersif',
+                      'Interface optimisée tactile',
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <CheckCircle className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                        <span className="text-xs text-gray-600">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
