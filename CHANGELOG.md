@@ -38,6 +38,15 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 - Page "Accès refusé" élégante pour les utilisateurs non autorisés
 - Routes `/utilisateurs` et `/supervision` protégées côté frontend
 
+#### Application Mobile Android
+- **Renommage complet** en ApiTrack (package `com.deltatx.apitrack`)
+- **Nouvelle icône** basée sur le logo ApiTrack
+- **Mise à jour OTA** : Vérification automatique des nouvelles versions au démarrage
+- **Endpoint `/api/settings/mobile/version`** pour configuration des mises à jour
+- **Splash screen V2.9** avec badge version mis à jour
+- **JS Bridge** double : `ApiTrackBridge` et `LogiTrackBridge` (rétrocompatibilité)
+- User-Agent mis à jour : `ApiTrack-Android/2.9.0`
+
 ### ✨ Améliorations UI
 
 #### Modal Bobines en Stock

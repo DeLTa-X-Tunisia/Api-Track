@@ -1,4 +1,4 @@
-package com.deltatx.logitrack;
+package com.deltatx.apitrack;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
 
 /**
- * SplashActivity — Écran d'accueil avec logo LogiTrack
+ * SplashActivity — Écran d'accueil avec logo ApiTrack
  * Vérifie si une config serveur existe, sinon redirige vers ConfigActivity
  */
 public class SplashActivity extends AppCompatActivity {

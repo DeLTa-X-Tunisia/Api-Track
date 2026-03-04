@@ -1,4 +1,4 @@
-package com.deltatx.logitrack;
+package com.deltatx.apitrack;
 
 import android.Manifest;
 import android.app.DownloadManager;
@@ -63,7 +63,7 @@ import java.util.Locale;
  */
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "LogiTrack";
+    private static final String TAG = "ApiTrack";
     private static final int CAMERA_PERMISSION_REQUEST = 100;
 
     private WebView webView;
@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private String lastErrorMessage = "";
     private NsdHelper nsdHelper;
     private Handler retryHandler;
+    private UpdateChecker updateChecker;
 
     // File upload support
     private ValueCallback<Uri[]> fileUploadCallback;
@@ -129,6 +130,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         loadApp();
+
+        // Vérifier les mises à jour disponibles
+        updateChecker = new UpdateChecker(this);
+        checkForUpdates();
 
         // Swipe-to-refresh
         swipeRefresh.setOnRefreshListener(() -> {
@@ -197,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
 
         // User-Agent personnalisé pour détecter l'app Android côté frontend
         String ua = settings.getUserAgentString();
-        settings.setUserAgentString(ua + " LogiTrack-Android/2.1.0");
+        settings.setUserAgentString(ua + " ApiTrack-Android/2.9.0");
 
         // Cookies
         CookieManager cookieManager = CookieManager.getInstance();
@@ -205,7 +210,8 @@ public class MainActivity extends AppCompatActivity {
         cookieManager.setAcceptThirdPartyCookies(webView, true);
 
         // JavaScript bridge pour communication error page ↔ Android
-        webView.addJavascriptInterface(new LogiTrackBridge(), "LogiTrackBridge");
+        webView.addJavascriptInterface(new ApiTrackBridge(), "LogiTrackBridge");
+        webView.addJavascriptInterface(new ApiTrackBridge(), "ApiTrackBridge");
 
         // WebViewClient pour gérer la navigation
         webView.setWebViewClient(new WebViewClient() {
@@ -404,7 +410,7 @@ public class MainActivity extends AppCompatActivity {
     private File createImageFile() {
         try {
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-            String imageFileName = "LOGITRACK_" + timeStamp + "_";
+            String imageFileName = "APITRACK_" + timeStamp + "_";
             File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
             return File.createTempFile(imageFileName, ".jpg", storageDir);
         } catch (IOException e) {
@@ -420,7 +426,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
             if (fileName == null || fileName.isEmpty()) {
-                fileName = "logitrack_report";
+                fileName = "apitrack_report";
                 if ("application/pdf".equals(mimeType)) fileName += ".pdf";
                 else if (mimeType != null && mimeType.contains("spreadsheet")) fileName += ".xlsx";
             }
@@ -485,7 +491,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * JavaScript bridge — pour la page d'erreur et le frontend
      */
-    private class LogiTrackBridge {
+    private class ApiTrackBridge {
         @JavascriptInterface
         public void retry() {
             retryHandler.post(() -> loadApp());
@@ -622,13 +628,15 @@ public class MainActivity extends AppCompatActivity {
 
         String js =
             "(function() { " +
-            "  if (document.getElementById('logitrack-mobile-css')) return; " +
+            "  if (document.getElementById('apitrack-mobile-css')) return; " +
             "  var style = document.createElement('style'); " +
-            "  style.id = 'logitrack-mobile-css'; " +
+            "  style.id = 'apitrack-mobile-css'; " +
             "  style.innerHTML = '" + css.replace("'", "\\'").replace("\n", " ") + "'; " +
             "  document.head.appendChild(style); " +
+            "  window.__APITRACK_MOBILE__ = true; " +
+            "  window.__APITRACK_VERSION__ = '2.9.0'; " +
             "  window.__LOGITRACK_MOBILE__ = true; " +
-            "  window.__LOGITRACK_VERSION__ = '2.1.0'; " +
+            "  window.__LOGITRACK_VERSION__ = '2.9.0'; " +
             "})()";
 
         webView.evaluateJavascript(js, null);
@@ -710,6 +718,32 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Permission caméra refusée — galerie uniquement", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    /**
+     * Vérifie si une mise à jour est disponible
+     */
+    private void checkForUpdates() {
+        if (serverUrl == null || updateChecker == null) return;
+
+        updateChecker.checkForUpdates(serverUrl, new UpdateChecker.UpdateCallback() {
+            @Override
+            public void onUpdateAvailable(String newVersion, String releaseNotes, String downloadUrl, boolean mandatory) {
+                Log.i(TAG, "Update available: " + newVersion);
+                UpdateChecker.showUpdateDialog(MainActivity.this, updateChecker, 
+                    newVersion, releaseNotes, downloadUrl, mandatory);
+            }
+
+            @Override
+            public void onNoUpdate() {
+                Log.d(TAG, "App is up to date");
+            }
+
+            @Override
+            public void onCheckFailed(String error) {
+                Log.w(TAG, "Update check failed: " + error);
+            }
+        });
     }
 
     @Override

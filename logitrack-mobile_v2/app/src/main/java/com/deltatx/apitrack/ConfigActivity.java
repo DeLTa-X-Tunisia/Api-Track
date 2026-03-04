@@ -1,4 +1,4 @@
-package com.deltatx.logitrack;
+package com.deltatx.apitrack;
 
 import android.content.Context;
 import android.content.Intent;
@@ -36,10 +36,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * ConfigActivity — Configuration initiale du serveur Logi-Track V2
+ * ConfigActivity — Configuration initiale du serveur ApiTrack
  *
  * Stratégie de découverte (en parallèle) :
- *   1. mDNS (NSD) — recherche du service _logitrack._tcp
+ *   1. mDNS (NSD) — recherche du service _logitrack._tcp ou _apitrack._tcp
  *   2. Scan réseau — probe TCP+HTTP sur le sous-réseau local (ports 5174, 3003)
  *
  * Si aucune méthode ne trouve le serveur, propose la configuration manuelle.
@@ -212,7 +212,7 @@ public class ConfigActivity extends AppCompatActivity {
         stopScan();
 
         progressDiscovery.setVisibility(View.VISIBLE);
-        tvDiscoveryStatus.setText("Recherche du serveur Logi-Track…");
+        tvDiscoveryStatus.setText("Recherche du serveur ApiTrack…");
         tvFoundServer.setVisibility(View.GONE);
         btnUseFound.setVisibility(View.GONE);
         btnRetry.setVisibility(View.GONE);
@@ -327,7 +327,7 @@ public class ConfigActivity extends AppCompatActivity {
                 conn.disconnect();
 
                 String response = sb.toString();
-                if (response.contains("Logi-Track") || response.contains("LogiTrack") || response.contains("OK")) {
+                if (response.contains("ApiTrack") || response.contains("Logi-Track") || response.contains("LogiTrack") || response.contains("OK")) {
                     Log.i(TAG, "✅ Serveur trouvé : " + ip + ":" + port);
                     return true;
                 }
@@ -504,7 +504,7 @@ public class ConfigActivity extends AppCompatActivity {
 
                 String response = sb.toString();
                 Log.d(TAG, "Health response: " + response);
-                return response.contains("Logi-Track") || response.contains("LogiTrack") || response.contains("OK");
+                return response.contains("ApiTrack") || response.contains("Logi-Track") || response.contains("LogiTrack") || response.contains("OK");
             }
             conn.disconnect();
         } catch (Exception e) {

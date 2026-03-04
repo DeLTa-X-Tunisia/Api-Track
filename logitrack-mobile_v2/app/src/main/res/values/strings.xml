@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Logi-Track</string>
+    <string name="app_name">ApiTrack</string>
     <string name="splash_subtitle">Suivi de production — Tubes spirale API 5L</string>
-    <string name="version_text">Logi-Track v2.5.0 — DeLTa-X Tunisia (Cloud)</string>
+    <string name="version_text">ApiTrack v2.9.0 — DeLTa-X Tunisia (Cloud)</string>
     
     <!-- Config -->
     <string name="config_header">Configuration de la connexion au serveur</string>
-    <string name="discovery_searching">Recherche du serveur Logi-Track sur le réseau…</string>
+    <string name="discovery_searching">Recherche du serveur ApiTrack sur le réseau…</string>
     <string name="btn_connect_server">Se connecter à ce serveur</string>
     <string name="btn_retry">Réessayer la recherche</string>
     <string name="btn_manual_config">⚙️  Configurer manuellement</string>
@@ -17,11 +17,11 @@
     <string name="default_port">5174</string>
     
     <!-- Main -->
-    <string name="quit_title">Quitter Logi-Track ?</string>
+    <string name="quit_title">Quitter ApiTrack ?</string>
     <string name="quit_message">Voulez-vous quitter l\'application ?</string>
     <string name="no_network">Pas de connexion réseau WiFi</string>
-    <string name="server_not_found">Le serveur n\'est pas un serveur Logi-Track</string>
-    <string name="connected_toast">✅ Connecté à Logi-Track V2</string>
+    <string name="server_not_found">Le serveur n\'est pas un serveur ApiTrack</string>
+    <string name="connected_toast">✅ Connecté à ApiTrack V2.9</string>
     <string name="connection_failed">❌ Impossible de joindre le serveur</string>
-    <string name="server_invalid">❌ Le serveur n\'est pas un serveur Logi-Track</string>
+    <string name="server_invalid">❌ Le serveur n\'est pas un serveur ApiTrack</string>
 </resources>

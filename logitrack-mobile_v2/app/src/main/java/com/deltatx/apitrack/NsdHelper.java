@@ -1,4 +1,4 @@
-package com.deltatx.logitrack;
+package com.deltatx.apitrack;
 
 import android.content.Context;
 import android.net.nsd.NsdManager;
@@ -8,8 +8,8 @@ import android.os.Looper;
 import android.util.Log;
 
 /**
- * NsdHelper — Découverte automatique du serveur LogiTrack via mDNS (DNS-SD)
- * Utilise android.net.nsd.NsdManager pour trouver le service _logitrack._tcp
+ * NsdHelper — Découverte automatique du serveur ApiTrack via mDNS (DNS-SD)
+ * Utilise android.net.nsd.NsdManager pour trouver le service _logitrack._tcp ou _apitrack._tcp
  */
 public class NsdHelper {
 
@@ -77,7 +77,9 @@ public class NsdHelper {
             public void onServiceFound(NsdServiceInfo serviceInfo) {
                 Log.d(TAG, "Service trouvé: " + serviceInfo.getServiceName());
 
-                if (serviceInfo.getServiceName().contains("LogiTrack") 
+                if (serviceInfo.getServiceName().contains("ApiTrack")
+                    || serviceInfo.getServiceName().contains("apitrack")
+                    || serviceInfo.getServiceName().contains("LogiTrack") 
                     || serviceInfo.getServiceName().contains("Logi-Track")
                     || serviceInfo.getServiceName().contains("logitrack")) {
                     // Résoudre pour obtenir l'IP et le port
@@ -91,7 +93,7 @@ public class NsdHelper {
                         public void onServiceResolved(NsdServiceInfo resolvedInfo) {
                             String host = resolvedInfo.getHost().getHostAddress();
                             int port = resolvedInfo.getPort();
-                            Log.i(TAG, "Serveur LogiTrack trouvé: " + host + ":" + port);
+                            Log.i(TAG, "Serveur ApiTrack trouvé: " + host + ":" + port);
 
                             cancelTimeout();
                             stopDiscovery();

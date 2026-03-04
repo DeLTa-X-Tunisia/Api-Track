@@ -32,6 +32,38 @@ router.get('/maintenance/status', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/mobile/version - Check mobile app version (public, for OTA updates)
+ * Returns version info for the mobile app to check for updates
+ */
+router.get('/mobile/version', async (req, res) => {
+  try {
+    // Read mobile version from project_settings or return default
+    const [rows] = await pool.query(
+      "SELECT setting_key, setting_value FROM project_settings WHERE setting_key LIKE 'mobile_%'"
+    );
+    const settings = {};
+    rows.forEach(r => { settings[r.setting_key] = r.setting_value; });
+    
+    res.json({
+      versionCode: parseInt(settings.mobile_version_code) || 4,
+      versionName: settings.mobile_version_name || '2.9.0',
+      downloadUrl: settings.mobile_download_url || '',
+      releaseNotes: settings.mobile_release_notes || 'Nouvelles fonctionnalités et corrections de bugs.',
+      mandatory: settings.mobile_mandatory_update === 'true'
+    });
+  } catch (error) {
+    console.error('Erreur GET mobile version:', error);
+    res.json({ 
+      versionCode: 4, 
+      versionName: '2.9.0',
+      downloadUrl: '',
+      releaseNotes: '',
+      mandatory: false
+    });
+  }
+});
+
 // ============================================
 // MIDDLEWARE AUTH (all routes below require auth)
 // ============================================

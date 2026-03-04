@@ -1,26 +1,27 @@
-# Logi-Track V2 Mobile — Android App
+# ApiTrack Mobile — Android App
 
-Application Android native qui charge Logi-Track V2 en WebView plein écran, avec découverte automatique du serveur via mDNS, support caméra/upload photos, et téléchargement de rapports PDF/Excel.
+Application Android native qui charge ApiTrack en WebView plein écran, avec découverte automatique du serveur via mDNS, support caméra/upload photos, téléchargement de rapports PDF/Excel, et mises à jour automatiques.
 
 ## Fonctionnalités
 
-- 🏭 **WebView plein écran** — Interface Logi-Track V2 sans barre de navigateur
+- 🏭 **WebView plein écran** — Interface ApiTrack sans barre de navigateur
 - 📸 **Caméra & Upload photos** — Prise de photo directe pour les étapes tube
 - 📥 **Téléchargement rapports** — PDF et Excel via DownloadManager natif
 - 📡 **mDNS auto-discovery** — Trouve automatiquement le serveur sur le réseau local
 - ⚙️ **Config manuelle** — Saisie IP/port (défaut 3003) en secours
 - 🔔 **Notifications temps réel** — Via WebSocket (Socket.io dans l'app web)
-- 🎨 **Splash screen V2** — Logo Logi-Track animé avec badge V2
-- 📱 **Icône adaptative** — Logo usine/tube sur fond bleu
+- 🎨 **Splash screen V2.9** — Logo ApiTrack animé avec badge V2.9
+- 📱 **Icône adaptative** — Logo ApiTrack sur fond bleu
 - 🔒 **Réseau local uniquement** — Config réseau sécurisée pour LAN
 - 🔄 **Swipe-to-refresh** — Pull-to-refresh intelligent
 - 🌐 **Page d'erreur avancée** — Diagnostic réseau avec retry automatique
 - 📲 **JS Bridge** — Communication bidirectionnelle Android ↔ Frontend
 - 🔋 **Mode industriel** — Écran toujours allumé, mode immersif
+- 🆕 **Mises à jour OTA** — Vérification automatique des nouvelles versions
 
 ## Modules supportés
 
-L'app mobile donne accès à tous les modules Logi-Track V2 :
+L'app mobile donne accès à tous les modules ApiTrack :
 
 | Module | Description |
 |--------|-------------|
@@ -62,7 +63,7 @@ cd logitrack-mobile_v2
 
 ```bash
 # Créer un keystore (une seule fois)
-keytool -genkey -v -keystore logitrack.keystore -alias logitrack -keyalg RSA -keysize 2048 -validity 10000
+keytool -genkey -v -keystore apitrack.keystore -alias apitrack -keyalg RSA -keysize 2048 -validity 10000
 
 # Compiler en release
 ./gradlew assembleRelease
@@ -84,18 +85,26 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 ## Configuration réseau
 
 ### Côté serveur (backend)
-Le serveur Logi-Track V2 écoute sur le port **3003** par défaut.
+Le serveur ApiTrack écoute sur le port **3003** par défaut.
 L'IP du serveur est affichée dans la console au démarrage.
 
 ### Côté Android
-L'app utilise `NsdManager` (Network Service Discovery, natif Android) pour détecter le service `_logitrack._tcp` sur le réseau local.
+L'app utilise `NsdManager` (Network Service Discovery, natif Android) pour détecter le service `_logitrack._tcp` ou `_apitrack._tcp` sur le réseau local.
 
 ### Si mDNS ne fonctionne pas
 1. L'utilisateur peut saisir manuellement l'IP du serveur
 2. L'IP est affichée dans la console de démarrage du backend
 3. Le port par défaut est **3003**
 
-## Nouveautés V2.1
+## Nouveautés V2.9
+
+- **Renommage ApiTrack** — Nouveau nom et branding officiel
+- **Nouvelle icône** — Logo ApiTrack moderne
+- **Package renommé** — `com.deltatx.apitrack` (package officiel)
+- **Mises à jour OTA** — Vérification automatique des nouvelles versions au démarrage
+- **Version V2.9.0** — Synchronisée avec le backend/frontend
+
+## Fonctionnalités héritées V2.1
 
 - **Upload photos** — `onShowFileChooser` avec chooser combiné (caméra + galerie)
 - **FileProvider** — Pour partage URI sécurisé des photos capturées
@@ -105,27 +114,27 @@ L'app utilise `NsdManager` (Network Service Discovery, natif Android) pour déte
 - **Swipe-to-refresh intelligent** — Désactivé quand la page est scrollée
 - **Diagnostic réseau avancé** — Test serveur en arrière-plan sur la page d'erreur
 - **CSS mobile optimisé** — Touch targets, smooth scrolling, inputs sélectionnables
-- **Port mis à jour** — 3002 → 3003 (cohérent avec V2 backend)
 
 ## Architecture
 
 ```
 logitrack-mobile_v2/
 ├── app/
-│   ├── build.gradle                    # Dépendances & config (v2.1.0)
+│   ├── build.gradle                    # Dépendances & config (v2.9.0)
 │   ├── src/main/
 │   │   ├── AndroidManifest.xml         # Permissions, FileProvider, activités
 │   │   ├── assets/
 │   │   │   └── error.html              # Page d'erreur offline animée
-│   │   ├── java/.../
-│   │   │   ├── SplashActivity.java     # Écran d'accueil animé V2
+│   │   ├── java/com/deltatx/apitrack/
+│   │   │   ├── SplashActivity.java     # Écran d'accueil animé V2.9
 │   │   │   ├── ConfigActivity.java     # Config serveur (auto + manuelle)
 │   │   │   ├── MainActivity.java       # WebView + camera + downloads
-│   │   │   └── NsdHelper.java          # Découverte mDNS
+│   │   │   ├── NsdHelper.java          # Découverte mDNS
+│   │   │   └── UpdateChecker.java      # Vérification mises à jour OTA
 │   │   └── res/
 │   │       ├── layout/                 # Layouts XML (splash, config, main)
-│   │       ├── drawable/               # Icônes, boutons, fonds
-│   │       ├── mipmap-anydpi-v26/      # Icône adaptative
+│   │       ├── drawable/               # Icônes, boutons, fonds, logo ApiTrack
+│   │       ├── mipmap-anydpi-v26/      # Icône adaptative ApiTrack
 │   │       ├── values/                 # Couleurs, strings, thèmes
 │   │       └── xml/
 │   │           ├── file_paths.xml      # FileProvider paths (caméra)
@@ -135,12 +144,40 @@ logitrack-mobile_v2/
 └── README.md                           # Ce fichier
 ```
 
+## Mises à jour OTA (Over-The-Air)
+
+L'application vérifie automatiquement les mises à jour au démarrage via l'endpoint `/api/settings/mobile/version`.
+
+### Configuration côté serveur
+
+Ajouter les paramètres dans `project_settings` :
+
+| Clé | Description |
+|-----|-------------|
+| `mobile_version_code` | Numéro de version (ex: 4) |
+| `mobile_version_name` | Nom de version (ex: "2.9.0") |
+| `mobile_download_url` | URL de téléchargement de l'APK |
+| `mobile_release_notes` | Notes de version |
+| `mobile_mandatory_update` | "true" pour forcer la mise à jour |
+
+### Note importante
+
+Étant donné que l'application est un wrapper WebView, les mises à jour de l'interface utilisateur sont automatiques (via le frontend web). Seules les modifications du code natif Android nécessitent une mise à jour de l'APK.
+
 ## Compatibilité
 
 - **Android minimum** : API 24 (Android 7.0 Nougat)
 - **Android cible** : API 34 (Android 14)
 - **Testé sur** : Tablettes et smartphones Android
-- **Backend requis** : Logi-Track V2 sur port 3003
+- **Backend requis** : ApiTrack sur port 3003
+- **iOS** : Non supporté nativement (utiliser l'application web en PWA)
+
+## Notes iOS
+
+Pour les utilisateurs iOS, l'application web ApiTrack est accessible via le navigateur Safari en mode plein écran (PWA). Pour ajouter l'app à l'écran d'accueil :
+1. Ouvrir ApiTrack dans Safari
+2. Appuyer sur le bouton "Partager"
+3. Sélectionner "Sur l'écran d'accueil"
 
 ## Auteur
 

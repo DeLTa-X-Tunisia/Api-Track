@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace 'com.deltatx.logitrack'
+    namespace 'com.deltatx.apitrack'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.deltatx.logitrack"
+        applicationId "com.deltatx.apitrack"
         minSdk 24
         targetSdk 34
-        versionCode 3
-        versionName "2.5.0"
+        versionCode 4
+        versionName "2.9.0"
     }
 
     buildTypes {

@@ -2,7 +2,7 @@
 <resources>
 
     <!-- Thème principal -->
-    <style name="Theme.LogiTrack" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.ApiTrack" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary_600</item>
         <item name="colorPrimaryDark">@color/primary_800</item>
         <item name="colorAccent">@color/primary_500</item>
@@ -12,12 +12,12 @@
     </style>
 
     <!-- Thème Splash -->
-    <style name="Theme.LogiTrack.Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.ApiTrack.Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/splash_bg</item>
         <item name="android:statusBarColor">@color/status_bar</item>
         <item name="android:navigationBarColor">@color/status_bar</item>
         <item name="android:windowFullscreen">true</item>
-        <item name="postSplashScreenTheme">@style/Theme.LogiTrack</item>
+        <item name="postSplashScreenTheme">@style/Theme.ApiTrack</item>
     </style>
 
 </resources>
