@@ -1173,6 +1173,12 @@ function TubeDetailModal({ tube, onClose, onRefresh, canAct, isSystemAdmin }) {
   const [expandedHistorique, setExpandedHistorique] = useState([]);
   const [photoViewer, setPhotoViewer] = useState(null);
 
+  // State for system_admin date editing
+  const [editingDate, setEditingDate] = useState(null); // { type: 'etape'|'history'|'tube', id: number, field: string }
+  const [editDateValue, setEditDateValue] = useState('');
+  const [editingTubeCreatedAt, setEditingTubeCreatedAt] = useState(false);
+  const [tubeCreatedAtValue, setTubeCreatedAtValue] = useState('');
+
   // Sub-modal state
   const [showValiderModal, setShowValiderModal] = useState(null);
   const [showNCModal, setShowNCModal] = useState(null);
@@ -1213,6 +1219,76 @@ function TubeDetailModal({ tube, onClose, onRefresh, canAct, isSystemAdmin }) {
       tubesApi.getHistorique(tube.id).then(r => setHistorique(r.data)).catch(() => {});
     }
   }, [tube?.id]);
+
+  // ============ ADMIN DATE EDITING ============
+  
+  const handleSaveDate = async () => {
+    if (!editingDate || !editDateValue) {
+      setEditingDate(null);
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      if (editingDate.type === 'etape') {
+        await tubesApi.adminUpdateEtapeDate(tube.id, editingDate.id, editingDate.field, editDateValue);
+        toast.success(`Date ${editingDate.field === 'started_at' ? 'début' : 'fin'} modifiée`);
+      } else if (editingDate.type === 'history') {
+        await tubesApi.adminUpdateHistoryDate(editingDate.id, editDateValue);
+        toast.success('Date historique modifiée');
+      }
+      setEditingDate(null);
+      setEditDateValue('');
+      await onRefresh();
+      // Reload historique
+      tubesApi.getHistorique(tube.id).then(r => setHistorique(r.data)).catch(() => {});
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erreur modification date');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startEditingDate = (type, id, field, currentValue) => {
+    setEditingDate({ type, id, field });
+    // Convert to datetime-local format
+    if (currentValue) {
+      const date = new Date(currentValue);
+      setEditDateValue(date.toISOString().slice(0, 16));
+    } else {
+      setEditDateValue('');
+    }
+  };
+
+  const handleSaveTubeCreatedAt = async () => {
+    if (!tubeCreatedAtValue) {
+      setEditingTubeCreatedAt(false);
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await tubesApi.adminUpdateCreatedAt(tube.id, tubeCreatedAtValue);
+      toast.success('Date de création modifiée');
+      setEditingTubeCreatedAt(false);
+      setTubeCreatedAtValue('');
+      await onRefresh();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erreur modification date');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startEditingTubeCreatedAt = () => {
+    setEditingTubeCreatedAt(true);
+    if (tube.created_at) {
+      const date = new Date(tube.created_at);
+      setTubeCreatedAtValue(date.toISOString().slice(0, 16));
+    } else {
+      setTubeCreatedAtValue('');
+    }
+  };
 
   // ============ ACTION HANDLERS ============
 
@@ -1542,7 +1618,44 @@ function TubeDetailModal({ tube, onClose, onRefresh, canAct, isSystemAdmin }) {
             {tube.longueur && <InfoBadge label="Longueur" value={`${tube.longueur} m`} />}
             {tube.parametre_numero && <InfoBadge label="Preset" value={tube.parametre_numero} />}
             {tube.equipe_nom && <InfoBadge label="Équipe" value={tube.equipe_nom} />}
-            <InfoBadge label="Créé le" value={tube.created_at ? new Date(tube.created_at).toLocaleDateString('fr-FR') : '—'} />
+            {/* Date de création avec édition inline pour system_admin */}
+            {editingTubeCreatedAt ? (
+              <div className="bg-gray-50 rounded-lg p-2 border border-gray-100">
+                <span className="text-[10px] text-gray-500 uppercase tracking-wide block mb-1">Créé le</span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="datetime-local"
+                    value={tubeCreatedAtValue}
+                    onChange={(e) => setTubeCreatedAtValue(e.target.value)}
+                    className="text-xs px-1 py-0.5 border rounded flex-1"
+                  />
+                  <button onClick={handleSaveTubeCreatedAt} className="text-green-600 hover:text-green-700">
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => setEditingTubeCreatedAt(false)} className="text-red-600 hover:text-red-700">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-2 border border-gray-100">
+                <span className="text-[10px] text-gray-500 uppercase tracking-wide block">Créé le</span>
+                <div className="flex items-center gap-1">
+                  <span className="font-medium text-sm text-gray-800">
+                    {tube.created_at ? new Date(tube.created_at).toLocaleDateString('fr-FR') : '—'}
+                  </span>
+                  {isSystemAdmin && (
+                    <button
+                      onClick={startEditingTubeCreatedAt}
+                      className="text-violet-500 hover:text-violet-700 opacity-60 hover:opacity-100"
+                      title="Modifier la date de création"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ---- Paramètres Soudure ---- */}
@@ -1719,10 +1832,42 @@ function TubeDetailModal({ tube, onClose, onRefresh, canAct, isSystemAdmin }) {
 
                     {/* Validation info */}
                     {tubeEtape?.operateur_prenom && (
-                      <p className="mt-1.5 text-[10px] text-gray-400">
-                        Par {tubeEtape.operateur_prenom} {tubeEtape.operateur_nom?.[0]}.
-                        {tubeEtape.completed_at && ` — ${new Date(tubeEtape.completed_at).toLocaleString('fr-FR')}`}
-                      </p>
+                      <div className="mt-1.5 text-[10px] text-gray-400 flex items-center gap-1 flex-wrap">
+                        <span>Par {tubeEtape.operateur_prenom} {tubeEtape.operateur_nom?.[0]}.</span>
+                        {tubeEtape.completed_at && (
+                          <>
+                            {editingDate?.type === 'etape' && editingDate?.id === tubeEtape.id && editingDate?.field === 'completed_at' ? (
+                              <span className="flex items-center gap-1">
+                                <input
+                                  type="datetime-local"
+                                  value={editDateValue}
+                                  onChange={(e) => setEditDateValue(e.target.value)}
+                                  className="text-[10px] px-1 py-0.5 border rounded"
+                                />
+                                <button onClick={handleSaveDate} className="text-green-600 hover:text-green-700">
+                                  <Check className="w-3 h-3" />
+                                </button>
+                                <button onClick={() => setEditingDate(null)} className="text-red-600 hover:text-red-700">
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <span>— {new Date(tubeEtape.completed_at).toLocaleString('fr-FR')}</span>
+                                {isSystemAdmin && (
+                                  <button
+                                    onClick={() => startEditingDate('etape', tubeEtape.id, 'completed_at', tubeEtape.completed_at)}
+                                    className="text-violet-500 hover:text-violet-700 opacity-60 hover:opacity-100"
+                                    title="Modifier la date"
+                                  >
+                                    <Edit3 className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
                     )}
 
                     {/* Commentaire */}
@@ -1781,9 +1926,37 @@ function TubeDetailModal({ tube, onClose, onRefresh, canAct, isSystemAdmin }) {
                                   </span>
                                   <div className="flex-1">
                                     {h.commentaire && <span className="text-gray-600">{h.commentaire}</span>}
-                                    <span className="text-gray-400 ml-1">
+                                    <span className="text-gray-400 ml-1 inline-flex items-center gap-1">
                                       — {h.operateur_prenom || ''} {h.operateur_nom?.[0] || ''}.
-                                      {' '}{new Date(h.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                      {editingDate?.type === 'history' && editingDate?.id === h.id ? (
+                                        <span className="flex items-center gap-1 ml-1">
+                                          <input
+                                            type="datetime-local"
+                                            value={editDateValue}
+                                            onChange={(e) => setEditDateValue(e.target.value)}
+                                            className="text-[10px] px-1 py-0.5 border rounded"
+                                          />
+                                          <button onClick={handleSaveDate} className="text-green-600 hover:text-green-700">
+                                            <Check className="w-3 h-3" />
+                                          </button>
+                                          <button onClick={() => setEditingDate(null)} className="text-red-600 hover:text-red-700">
+                                            <X className="w-3 h-3" />
+                                          </button>
+                                        </span>
+                                      ) : (
+                                        <>
+                                          {' '}{new Date(h.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                          {isSystemAdmin && (
+                                            <button
+                                              onClick={() => startEditingDate('history', h.id, 'created_at', h.created_at)}
+                                              className="text-violet-500 hover:text-violet-700 opacity-60 hover:opacity-100 ml-1"
+                                              title="Modifier la date"
+                                            >
+                                              <Edit3 className="w-3 h-3" />
+                                            </button>
+                                          )}
+                                        </>
+                                      )}
                                     </span>
                                     {h.defauts?.length > 0 && (
                                       <div className="mt-0.5 space-y-0.5">

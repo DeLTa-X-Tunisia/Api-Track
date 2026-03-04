@@ -5,7 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const { authenticateToken, requireSupervisor } = require('../middleware/auth');
+const { authenticateToken, requireSupervisor, requireSystemAdmin } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -1811,6 +1811,178 @@ router.delete('/responsabilites/:id', canAct, async (req, res) => {
   } catch (error) {
     console.error('Erreur DELETE responsabilites:', error);
     res.status(500).json({ error: 'Erreur suppression responsabilité' });
+  }
+});
+
+// ============================================
+// ADMIN SYSTEM - MODIFICATION DATES ÉTAPES
+// ============================================
+
+/**
+ * PUT /tubes/:tubeId/etape/:etapeId/admin/update-dates
+ * Permet à system_admin de modifier les dates started_at ou completed_at d'une étape
+ */
+router.put('/:tubeId/etape/:etapeId/admin/update-dates', requireSystemAdmin, async (req, res) => {
+  try {
+    const { tubeId, etapeId } = req.params;
+    const { field, value } = req.body;
+    
+    // Valider le champ
+    const allowedFields = ['started_at', 'completed_at'];
+    if (!allowedFields.includes(field)) {
+      return res.status(400).json({ error: 'Champ non autorisé', allowedFields });
+    }
+    
+    // Vérifier que l'étape existe
+    const [etapeRows] = await pool.query(
+      'SELECT * FROM tube_etapes WHERE id = ? AND tube_id = ?',
+      [etapeId, tubeId]
+    );
+    
+    if (etapeRows.length === 0) {
+      return res.status(404).json({ error: 'Étape non trouvée' });
+    }
+    
+    // Formater la valeur datetime
+    let formattedValue = null;
+    if (value) {
+      const dateObj = new Date(value);
+      if (isNaN(dateObj.getTime())) {
+        return res.status(400).json({ error: 'Format de date invalide' });
+      }
+      formattedValue = dateObj.toISOString().slice(0, 19).replace('T', ' ');
+    }
+    
+    // Mise à jour
+    await pool.query(
+      `UPDATE tube_etapes SET ${field} = ?, updated_at = NOW() WHERE id = ?`,
+      [formattedValue, etapeId]
+    );
+    
+    // Log de l'action
+    console.log(`[ADMIN] system_admin ${req.user.nom} ${req.user.prenom} a modifié ${field} de l'étape ${etapeId} du tube ${tubeId}`);
+    
+    res.json({ 
+      success: true, 
+      message: `Date ${field} modifiée avec succès`,
+      field,
+      newValue: formattedValue
+    });
+  } catch (error) {
+    console.error('Erreur modification date étape tube:', error);
+    res.status(500).json({ error: 'Erreur lors de la modification de la date' });
+  }
+});
+
+/**
+ * PUT /tubes/history/:historyId/admin/update-date
+ * Permet à system_admin de modifier la date created_at d'un historique de réparation
+ */
+router.put('/history/:historyId/admin/update-date', requireSystemAdmin, async (req, res) => {
+  try {
+    const { historyId } = req.params;
+    const { value } = req.body;
+    
+    // Vérifier que l'entrée historique existe
+    const [historyRows] = await pool.query(
+      'SELECT * FROM tube_etape_historique WHERE id = ?',
+      [historyId]
+    );
+    
+    if (historyRows.length === 0) {
+      return res.status(404).json({ error: 'Entrée historique non trouvée' });
+    }
+    
+    // Formater la valeur datetime
+    let formattedValue = null;
+    if (value) {
+      const dateObj = new Date(value);
+      if (isNaN(dateObj.getTime())) {
+        return res.status(400).json({ error: 'Format de date invalide' });
+      }
+      formattedValue = dateObj.toISOString().slice(0, 19).replace('T', ' ');
+    }
+    
+    // Mise à jour
+    await pool.query(
+      'UPDATE tube_etape_historique SET created_at = ? WHERE id = ?',
+      [formattedValue, historyId]
+    );
+    
+    // Log de l'action
+    console.log(`[ADMIN] system_admin ${req.user.nom} ${req.user.prenom} a modifié la date de l'historique ${historyId}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Date historique modifiée avec succès',
+      newValue: formattedValue
+    });
+  } catch (error) {
+    console.error('Erreur modification date historique tube:', error);
+    res.status(500).json({ error: 'Erreur lors de la modification de la date historique' });
+  }
+});
+
+/**
+ * PUT /tubes/:id/admin/update-created-at
+ * Permet à system_admin de modifier la date de création du tube
+ */
+router.put('/:id/admin/update-created-at', requireSystemAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { value } = req.body;
+    
+    // Vérifier que le tube existe et récupérer le lot_id
+    const [tubeRows] = await pool.query(
+      'SELECT t.*, l.created_at as lot_created_at, l.numero as lot_numero FROM tubes t LEFT JOIN lots l ON t.lot_id = l.id WHERE t.id = ?',
+      [id]
+    );
+    
+    if (tubeRows.length === 0) {
+      return res.status(404).json({ error: 'Tube non trouvé' });
+    }
+    
+    const tube = tubeRows[0];
+    
+    // Formater la valeur datetime
+    let formattedValue = null;
+    if (value) {
+      const dateObj = new Date(value);
+      if (isNaN(dateObj.getTime())) {
+        return res.status(400).json({ error: 'Format de date invalide' });
+      }
+      
+      // Vérifier que la date n'est pas antérieure à la date de création du lot
+      if (tube.lot_created_at) {
+        const lotCreatedAt = new Date(tube.lot_created_at);
+        if (dateObj < lotCreatedAt) {
+          return res.status(400).json({ 
+            error: `La date de création du tube ne peut pas être antérieure à la date de création du lot (${lotCreatedAt.toLocaleDateString('fr-FR')} ${lotCreatedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })})`,
+            lotCreatedAt: tube.lot_created_at
+          });
+        }
+      }
+      
+      formattedValue = dateObj.toISOString().slice(0, 19).replace('T', ' ');
+    }
+    
+    // Mise à jour
+    await pool.query(
+      'UPDATE tubes SET created_at = ?, updated_at = NOW() WHERE id = ?',
+      [formattedValue, id]
+    );
+    
+    // Log de l'action
+    console.log(`[ADMIN] system_admin ${req.user.nom} ${req.user.prenom} a modifié la date de création du tube ${id}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Date de création modifiée avec succès',
+      newValue: formattedValue
+    });
+  } catch (error) {
+    console.error('Erreur modification date création tube:', error);
+    res.status(500).json({ error: 'Erreur lors de la modification de la date de création' });
   }
 });
 

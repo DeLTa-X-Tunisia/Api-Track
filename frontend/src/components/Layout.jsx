@@ -323,7 +323,7 @@ export default function Layout({ children }) {
             <Link to="/" className="flex items-center justify-center group">
               <img 
                 src="/logo.png" 
-                alt="Logi-Track V2" 
+                alt="Api-Track" 
                 className="h-20 w-auto drop-shadow-lg group-hover:scale-105 transition-transform"
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
@@ -333,7 +333,7 @@ export default function Layout({ children }) {
             <Link to="/" className="hidden lg:flex items-center justify-center group">
               <img 
                 src="/logo.png" 
-                alt="LT" 
+                alt="Api-Track" 
                 className="h-10 w-auto drop-shadow-lg group-hover:scale-110 transition-transform"
                 onError={(e) => { 
                   e.target.style.display = 'none'; 

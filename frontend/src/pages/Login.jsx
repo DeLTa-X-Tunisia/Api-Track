@@ -112,7 +112,7 @@ export default function Login() {
             <div className="flex flex-col items-center justify-center">
               <img 
                 src="/logologin.png" 
-                alt="Logi-Track V2" 
+                alt="Api-Track" 
                 className="h-28 sm:h-36 w-auto drop-shadow-2xl mb-4"
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -123,7 +123,7 @@ export default function Login() {
                 <Shield className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
               </div>
               <div className="px-4 py-1 rounded-full bg-white/10 backdrop-blur-sm mb-3">
-                <span className="text-sm font-semibold text-primary-200 tracking-wide">V2</span>
+                <span className="text-sm font-semibold text-primary-200 tracking-wide">V2.9</span>
               </div>
               <p className="text-primary-200 text-xs sm:text-sm italic tracking-wider whitespace-nowrap">
                 AUT VIAM INVENIAM AUT FACIAM

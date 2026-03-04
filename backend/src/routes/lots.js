@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const { authenticateToken, requireSupervisor } = require('../middleware/auth');
+const { authenticateToken, requireSupervisor, requireSystemAdmin } = require('../middleware/auth');
 
 // Authentification requise pour toutes les routes
 router.use(authenticateToken);
@@ -836,6 +836,112 @@ router.delete('/:id', requireSupervisor, async (req, res) => {
   } catch (error) {
     console.error('Erreur DELETE:', error);
     res.status(500).json({ error: 'Erreur suppression' });
+  }
+});
+
+// ============================================
+// PUT /api/lots/:id/admin/update-dates - Modifier les dates du pipeline (System Admin uniquement)
+// ============================================
+router.put('/:id/admin/update-dates', requireSystemAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { field, value } = req.body;
+    
+    // Champs autorisés à modifier
+    const allowedFields = [
+      'created_at',           // Date création du lot
+      'date_reception',       // Date réception bobine
+      'date_installation',    // Date installation bobine
+      'date_equipe_confirmee' // Date confirmation équipe
+    ];
+    
+    if (!allowedFields.includes(field)) {
+      return res.status(400).json({ error: 'Champ non autorisé' });
+    }
+    
+    // Valider le format de la date
+    const dateValue = new Date(value);
+    if (isNaN(dateValue.getTime())) {
+      return res.status(400).json({ error: 'Format de date invalide' });
+    }
+    
+    // Récupérer les dates actuelles du lot pour recalculer les retards
+    const [lotRows] = await pool.query(
+      `SELECT created_at, date_reception, date_installation, bobine_recue, bobine_installee FROM lots WHERE id = ?`,
+      [id]
+    );
+    
+    if (lotRows.length === 0) {
+      return res.status(404).json({ error: 'Lot non trouvé' });
+    }
+    
+    const lot = lotRows[0];
+    
+    // Mise à jour de la date
+    await pool.query(
+      `UPDATE lots SET ${field} = ? WHERE id = ?`,
+      [dateValue, id]
+    );
+    
+    // Recalculer les retards en fonction du champ modifié
+    // Les nouvelles valeurs pour le calcul
+    const dates = {
+      created_at: field === 'created_at' ? dateValue : lot.created_at,
+      date_reception: field === 'date_reception' ? dateValue : lot.date_reception,
+      date_installation: field === 'date_installation' ? dateValue : lot.date_installation
+    };
+    
+    // Calcul des retards
+    let retardReception = 0;
+    let retardInstallation = 0;
+    
+    // Retard réception = temps entre création du lot et réception de la bobine
+    if (dates.created_at && dates.date_reception && lot.bobine_recue) {
+      const diffReception = new Date(dates.date_reception) - new Date(dates.created_at);
+      retardReception = Math.max(0, Math.round(diffReception / 60000)); // en minutes
+    }
+    
+    // Retard installation = temps entre réception et installation
+    if (dates.date_reception && dates.date_installation && lot.bobine_installee) {
+      const diffInstallation = new Date(dates.date_installation) - new Date(dates.date_reception);
+      retardInstallation = Math.max(0, Math.round(diffInstallation / 60000)); // en minutes
+    }
+    
+    // Mettre à jour les retards si besoin
+    if (field === 'created_at' || field === 'date_reception') {
+      // La modification de created_at ou date_reception affecte retard_reception
+      if (lot.bobine_recue) {
+        await pool.query(
+          `UPDATE lots SET retard_reception_minutes = ? WHERE id = ?`,
+          [retardReception, id]
+        );
+      }
+    }
+    
+    if (field === 'date_reception' || field === 'date_installation') {
+      // La modification de date_reception ou date_installation affecte retard_installation
+      if (lot.bobine_installee) {
+        await pool.query(
+          `UPDATE lots SET retard_installation_minutes = ? WHERE id = ?`,
+          [retardInstallation, id]
+        );
+      }
+    }
+    
+    // Log de l'action pour traçabilité
+    console.log(`[ADMIN] User ${req.user.id} modified ${field} for lot ${id} to ${value}`);
+    console.log(`[ADMIN] Recalculated delays - Reception: ${retardReception}min, Installation: ${retardInstallation}min`);
+    
+    res.json({ 
+      message: 'Date mise à jour et retards recalculés', 
+      field, 
+      value: dateValue,
+      retard_reception_minutes: retardReception,
+      retard_installation_minutes: retardInstallation
+    });
+  } catch (error) {
+    console.error('Erreur update-dates:', error);
+    res.status(500).json({ error: 'Erreur modification date' });
   }
 });
 

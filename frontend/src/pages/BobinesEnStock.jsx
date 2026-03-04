@@ -478,14 +478,14 @@ export default function BobinesEnStock() {
       {/* MODAL FORMULAIRE CREATE / EDIT               */}
       {/* ============================================ */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 bg-black/50 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full mb-10 animate-fadeIn">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-900">
                 {editingBobine ? 'Modifier la bobine' : 'Nouvelle bobine'}
               </h2>
               <p className="text-sm text-gray-500 mt-1">
-                Opérateur : {user?.prenom} {user?.nom}
+                Opérateur : <span className="font-bold text-violet-600">{user?.prenom} {user?.nom}</span>
               </p>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -600,17 +600,6 @@ export default function BobinesEnStock() {
                     onChange={(e) => setFormData({...formData, date_reception: e.target.value})}
                   />
                 </div>
-              </div>
-
-              {/* Notes */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea
-                  className="input-field" rows="3"
-                  placeholder="Commentaires, observations..."
-                  value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                />
               </div>
 
               {/* Photos */}

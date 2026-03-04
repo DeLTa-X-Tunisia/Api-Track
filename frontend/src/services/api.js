@@ -161,6 +161,8 @@ export const lotsApi = {
   updateStep: (id, step, data) => api.put(`/lots/${id}/${step}`, data),
   validationRapide: (id) => api.put(`/lots/${id}/validation-rapide`),
   updateParametres: (id, data) => api.put(`/lots/${id}/parametres`, data),
+  // Admin système uniquement - modification des dates du pipeline
+  adminUpdateDate: (id, field, value) => api.put(`/lots/${id}/admin/update-dates`, { field, value }),
 };
 
 // ============================================
@@ -196,6 +198,10 @@ export const tubesApi = {
   getPDF: (id) => api.get(`/tubes/${id}/pdf`, { responseType: 'blob' }),
   // Responsabilités
   getResponsabilites: () => api.get('/tubes/responsabilites/list'),
+  // Admin system - modification dates
+  adminUpdateEtapeDate: (tubeId, etapeId, field, value) => api.put(`/tubes/${tubeId}/etape/${etapeId}/admin/update-dates`, { field, value }),
+  adminUpdateHistoryDate: (historyId, value) => api.put(`/tubes/history/${historyId}/admin/update-date`, { value }),
+  adminUpdateCreatedAt: (id, value) => api.put(`/tubes/${id}/admin/update-created-at`, { value }),
 };
 
 // ============================================
@@ -218,6 +224,17 @@ export const settingsApi = {
   update: (key, value) => api.put(`/settings/${key}`, { value }),
   uploadLogo: (type, formData) => api.post(`/settings/upload-logo/${type}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   deleteLogo: (type) => api.delete(`/settings/delete-logo/${type}`),
+};
+
+// ============================================
+// API Maintenance (System Admin)
+// ============================================
+export const maintenanceApi = {
+  // Public - no auth required
+  getStatus: () => fetch(`${api.defaults.baseURL}/settings/maintenance/status`).then(r => r.json()).catch(() => ({ maintenance: false })),
+  // Requires system_admin auth
+  getSettings: () => api.get('/settings/maintenance'),
+  toggle: (enabled, message) => api.put('/settings/maintenance/toggle', { enabled, message }),
 };
 
 // ============================================

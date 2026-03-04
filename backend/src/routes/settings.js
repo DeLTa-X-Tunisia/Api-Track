@@ -1,13 +1,39 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireSystemAdmin } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
 // ============================================
-// MIDDLEWARE AUTH
+// PUBLIC ROUTES - Maintenance (No auth required)
+// ============================================
+
+/**
+ * GET /api/settings/maintenance/status - Check maintenance mode (public)
+ */
+router.get('/maintenance/status', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT setting_key, setting_value FROM project_settings WHERE setting_key IN ('maintenance_mode', 'maintenance_message')"
+    );
+    const settings = {};
+    rows.forEach(r => { settings[r.setting_key] = r.setting_value; });
+    
+    const isActive = settings.maintenance_mode === 'true';
+    res.json({
+      maintenance: isActive,
+      message: isActive ? (settings.maintenance_message || 'Maintenance en cours...') : null
+    });
+  } catch (error) {
+    console.error('Erreur GET maintenance status:', error);
+    res.json({ maintenance: false, message: null });
+  }
+});
+
+// ============================================
+// MIDDLEWARE AUTH (all routes below require auth)
 // ============================================
 router.use(authenticateToken);
 
@@ -71,6 +97,8 @@ const uploadLogo = multer({
       ['project_name', '', 'text', 'project', 'Nom du Projet', 5],
       ['project_code', '', 'text', 'project', 'Code du Projet', 6],
       ['project_address', '', 'text', 'project', 'Adresse du Projet', 7],
+      ['maintenance_mode', 'false', 'text', 'system', 'Mode Maintenance', 100],
+      ['maintenance_message', 'Api-Track est actuellement en maintenance. Nous serons de retour très bientôt !', 'textarea', 'system', 'Message Maintenance', 101],
     ];
     for (const [key, value, type, category, label, order] of required) {
       await pool.query(
@@ -233,6 +261,65 @@ router.delete('/delete-logo/:type', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Erreur delete logo:', error);
     res.status(500).json({ error: 'Erreur suppression logo' });
+  }
+});
+
+// ============================================
+// MAINTENANCE MODE - System Admin Only
+// ============================================
+
+/**
+ * PUT /api/settings/maintenance/toggle - Toggle maintenance mode (system_admin only)
+ */
+router.put('/maintenance/toggle', requireSystemAdmin, async (req, res) => {
+  try {
+    const { enabled, message } = req.body;
+    
+    // Update maintenance_mode
+    await pool.query(
+      "UPDATE project_settings SET setting_value = ? WHERE setting_key = 'maintenance_mode'",
+      [enabled ? 'true' : 'false']
+    );
+    
+    // Update message if provided
+    if (message !== undefined) {
+      await pool.query(
+        "UPDATE project_settings SET setting_value = ? WHERE setting_key = 'maintenance_message'",
+        [message]
+      );
+    }
+    
+    console.log(`[ADMIN] ${req.user.nom} ${req.user.prenom} a ${enabled ? 'activé' : 'désactivé'} le mode maintenance`);
+    
+    res.json({ 
+      success: true, 
+      maintenance: enabled,
+      message: enabled ? message : null 
+    });
+  } catch (error) {
+    console.error('Erreur toggle maintenance:', error);
+    res.status(500).json({ error: 'Erreur changement mode maintenance' });
+  }
+});
+
+/**
+ * GET /api/settings/maintenance - Get maintenance settings (system_admin only)
+ */
+router.get('/maintenance', requireSystemAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT setting_key, setting_value FROM project_settings WHERE setting_key IN ('maintenance_mode', 'maintenance_message')"
+    );
+    const settings = {};
+    rows.forEach(r => { settings[r.setting_key] = r.setting_value; });
+    
+    res.json({
+      enabled: settings.maintenance_mode === 'true',
+      message: settings.maintenance_message || ''
+    });
+  } catch (error) {
+    console.error('Erreur GET maintenance settings:', error);
+    res.status(500).json({ error: 'Erreur récupération paramètres maintenance' });
   }
 });
 

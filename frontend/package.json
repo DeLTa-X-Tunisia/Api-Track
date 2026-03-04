@@ -1,7 +1,7 @@
 {
-  "name": "logitrack2-frontend",
+  "name": "api-track-frontend",
   "private": true,
-  "version": "2.5.0",
+  "version": "2.9.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

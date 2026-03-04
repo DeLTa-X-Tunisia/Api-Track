@@ -1,7 +1,7 @@
 {
-  "name": "logitrack2-backend",
-  "version": "2.5.0",
-  "description": "Backend API pour Logi-Track V2",
+  "name": "api-track-backend",
+  "version": "2.9.0",
+  "description": "Backend API pour Api-Track",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -9,7 +9,7 @@
     "init-db": "node src/database/init.js"
   },
   "keywords": [
-    "logitrack2",
+    "api-track",
     "erp",
     "production",
     "suivi"

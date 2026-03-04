@@ -44,7 +44,7 @@ const DEFAULT_HEADS = [
 ];
 
 export default function BobineProduction() {
-  const { user, canAct } = useAuth();
+  const { user, canAct, isSystemAdmin } = useAuth();
   const toast = useToast();
   const confirm = useConfirm();
 
@@ -318,6 +318,7 @@ export default function BobineProduction() {
           presets={presetsDisponibles}
           equipes={equipesDisponibles}
           canAct={canAct}
+          isSystemAdmin={isSystemAdmin}
           onClose={() => { setShowDetailModal(false); setSelectedLot(null); }}
           onRefresh={refreshDetailModal}
           onPresetsChange={async () => {
@@ -846,12 +847,33 @@ function NewLotModal({ bobines, prochainNumero, presets, equipes, preselectedBob
 // ==========================================
 // LotDetailModal (Workflow)
 // ==========================================
-function LotDetailModal({ lot, lots, motifsRetard, presets, equipes = [], canAct, onClose, onRefresh, onPresetsChange }) {
+function LotDetailModal({ lot, lots, motifsRetard, presets, equipes = [], canAct, isSystemAdmin, onClose, onRefresh, onPresetsChange }) {
   const toast = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showRetardForm, setShowRetardForm] = useState(null); 
   const [retardData, setRetardData] = useState({ minutes: 0, motif_id: '', commentaire: '' });
+
+  // État pour l'édition des dates (admin système uniquement)
+  const [editingDate, setEditingDate] = useState(null);
+  const [editDateValue, setEditDateValue] = useState('');
+
+  // Fonction pour sauvegarder une date modifiée
+  const handleSaveDate = async (field) => {
+    if (!editDateValue) {
+      toast.error('Veuillez saisir une date valide');
+      return;
+    }
+    try {
+      await lotsApi.adminUpdateDate(lot.id, field, editDateValue);
+      toast.success('Date mise à jour');
+      setEditingDate(null);
+      setEditDateValue('');
+      onRefresh();
+    } catch (error) {
+      toast.error('Erreur lors de la modification de la date');
+    }
+  };
 
   // Paramètres
   const [parametreMode, setParametreMode] = useState(null);
@@ -1047,7 +1069,38 @@ function LotDetailModal({ lot, lots, motifsRetard, presets, equipes = [], canAct
                 {lot.created_at && (
                   <div className="flex items-start sm:items-center gap-2 text-xs sm:text-sm text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg">
                     <Clock className="w-4 h-4 flex-shrink-0 mt-0.5 sm:mt-0" />
-                    <span className="font-medium">Lot démarré le {new Date(lot.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                    {editingDate === 'created_at' ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <input
+                          type="datetime-local"
+                          value={editDateValue}
+                          onChange={(e) => setEditDateValue(e.target.value)}
+                          className="flex-1 px-2 py-1 border rounded text-sm"
+                        />
+                        <button onClick={() => handleSaveDate('created_at')} className="p-1 bg-green-500 text-white rounded hover:bg-green-600">
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => { setEditingDate(null); setEditDateValue(''); }} className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="font-medium">Lot démarré le {new Date(lot.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        {isSystemAdmin && (
+                          <button
+                            onClick={() => {
+                              setEditingDate('created_at');
+                              setEditDateValue(new Date(lot.created_at).toISOString().slice(0, 16));
+                            }}
+                            className="ml-2 p-1 text-violet-600 hover:bg-violet-100 rounded transition-colors"
+                            title="Modifier la date (Admin)"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </>
+                    )}
                   </div>
                 )}
                 <div className="flex items-center gap-3 sm:gap-4 bg-green-50 p-3 rounded-lg">
@@ -1076,8 +1129,39 @@ function LotDetailModal({ lot, lots, motifsRetard, presets, equipes = [], canAct
                   <div className="space-y-1">
                     <div className={`flex flex-wrap items-start sm:items-center gap-1 sm:gap-2 text-sm ${style.color}`}>
                       <DelayIcon className={`w-5 h-5 ${style.iconColor} flex-shrink-0`} />
-                      <span>Bobine reçue le {new Date(lot.date_reception).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                      {delay > 0 && <span className="font-semibold">— {formatDelay(delay)} de retard</span>}
+                      {editingDate === 'date_reception' ? (
+                        <div className="flex items-center gap-2 flex-1">
+                          <input
+                            type="datetime-local"
+                            value={editDateValue}
+                            onChange={(e) => setEditDateValue(e.target.value)}
+                            className="flex-1 px-2 py-1 border rounded text-sm"
+                          />
+                          <button onClick={() => handleSaveDate('date_reception')} className="p-1 bg-green-500 text-white rounded hover:bg-green-600">
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => { setEditingDate(null); setEditDateValue(''); }} className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <span>Bobine reçue le {new Date(lot.date_reception).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                          {isSystemAdmin && (
+                            <button
+                              onClick={() => {
+                                setEditingDate('date_reception');
+                                setEditDateValue(new Date(lot.date_reception).toISOString().slice(0, 16));
+                              }}
+                              className="p-1 text-violet-600 hover:bg-violet-100 rounded transition-colors"
+                              title="Modifier la date (Admin)"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {delay > 0 && <span className="font-semibold">— {formatDelay(delay)} de retard</span>}
+                        </>
+                      )}
                     </div>
                     {delay >= 10 && lot.motif_reception_libelle && (
                       <div className="text-xs sm:text-sm text-red-500 ml-7 italic">Motif : {lot.motif_reception_libelle}</div>
@@ -1113,8 +1197,39 @@ function LotDetailModal({ lot, lots, motifsRetard, presets, equipes = [], canAct
                   <div className="space-y-1">
                     <div className={`flex flex-wrap items-start sm:items-center gap-1 sm:gap-2 text-sm ${style.color}`}>
                       <DelayIcon className={`w-5 h-5 ${style.iconColor} flex-shrink-0`} />
-                      <span>Bobine installée le {new Date(lot.date_installation).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                      {delay > 0 && <span className="font-semibold">— {formatDelay(delay)} de retard</span>}
+                      {editingDate === 'date_installation' ? (
+                        <div className="flex items-center gap-2 flex-1">
+                          <input
+                            type="datetime-local"
+                            value={editDateValue}
+                            onChange={(e) => setEditDateValue(e.target.value)}
+                            className="flex-1 px-2 py-1 border rounded text-sm"
+                          />
+                          <button onClick={() => handleSaveDate('date_installation')} className="p-1 bg-green-500 text-white rounded hover:bg-green-600">
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => { setEditingDate(null); setEditDateValue(''); }} className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <span>Bobine installée le {new Date(lot.date_installation).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                          {isSystemAdmin && (
+                            <button
+                              onClick={() => {
+                                setEditingDate('date_installation');
+                                setEditDateValue(new Date(lot.date_installation).toISOString().slice(0, 16));
+                              }}
+                              className="p-1 text-violet-600 hover:bg-violet-100 rounded transition-colors"
+                              title="Modifier la date (Admin)"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {delay > 0 && <span className="font-semibold">— {formatDelay(delay)} de retard</span>}
+                        </>
+                      )}
                     </div>
                     {delay >= 10 && lot.motif_installation_libelle && (
                       <div className="text-xs sm:text-sm text-red-500 ml-7 italic">Motif : {lot.motif_installation_libelle}</div>
@@ -1145,7 +1260,38 @@ function LotDetailModal({ lot, lots, motifsRetard, presets, equipes = [], canAct
               <div className="space-y-2">
                 <div className="text-green-600 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5" />
-                  Confirmée le {lot.date_equipe_confirmee && new Date(lot.date_equipe_confirmee).toLocaleString('fr-FR')}
+                  {editingDate === 'date_equipe_confirmee' ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <input
+                        type="datetime-local"
+                        value={editDateValue}
+                        onChange={(e) => setEditDateValue(e.target.value)}
+                        className="flex-1 px-2 py-1 border rounded text-sm"
+                      />
+                      <button onClick={() => handleSaveDate('date_equipe_confirmee')} className="p-1 bg-green-500 text-white rounded hover:bg-green-600">
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => { setEditingDate(null); setEditDateValue(''); }} className="p-1 bg-gray-400 text-white rounded hover:bg-gray-500">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <span>Confirmée le {lot.date_equipe_confirmee && new Date(lot.date_equipe_confirmee).toLocaleString('fr-FR')}</span>
+                      {isSystemAdmin && lot.date_equipe_confirmee && (
+                        <button
+                          onClick={() => {
+                            setEditingDate('date_equipe_confirmee');
+                            setEditDateValue(new Date(lot.date_equipe_confirmee).toISOString().slice(0, 16));
+                          }}
+                          className="p-1 text-violet-600 hover:bg-violet-100 rounded transition-colors"
+                          title="Modifier la date (Admin)"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </>
+                  )}
                 </div>
                 {lot.equipe_nom && (
                   <div className="flex items-center gap-2 bg-violet-50 px-3 py-2 rounded-lg">

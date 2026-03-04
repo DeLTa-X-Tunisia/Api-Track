@@ -1,10 +1,99 @@
-# Changelog — Logi-Track V2
+# Changelog — Api-Track
 
 Toutes les modifications notables de ce projet sont documentées dans ce fichier.
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
 ---
+
+## [2.9.0] — 2026-03-04
+
+### 🚀 Nouvelles fonctionnalités
+
+#### Page de Maintenance
+- **Page de maintenance élégante** avec design moderne et animations
+  - Animation de particules flottantes
+  - Cercle rotatif avec icône engrenage animée
+  - Message personnalisable par l'admin système
+  - Design responsive adapté mobile
+  - Bouton "Réessayer" avec rechargement
+- **Accès admin discret** : Clic sur le footer pour révéler le bouton "Accès administrateur"
+- **Toggle maintenance** dans la page Supervision Admin
+- Route publique `/api/settings/maintenance/status` pour vérifier le statut
+- Routes admin `/api/settings/maintenance` et `/api/settings/maintenance/toggle`
+
+#### Édition des dates inline (Admin Système)
+- **Lots (Bobines Production)** : Modification inline des dates du pipeline
+  - created_at, date_reception, date_installation, date_equipe_confirmee
+  - Recalcul automatique des retards (retard_reception_minutes, retard_installation_minutes)
+  - Icône crayon violet visible uniquement pour system_admin
+- **Tubes** : Modification inline des dates des étapes
+  - started_at et completed_at pour chaque étape du pipeline
+  - Modification de la date de création du tube
+  - Validation : impossible de mettre une date antérieure à celle du lot
+- **Historique réparations tubes** : Modification de created_at
+
+#### Protection des routes
+- Composant `SystemAdminRoute` pour protéger les pages admin
+- Page "Accès refusé" élégante pour les utilisateurs non autorisés
+- Routes `/utilisateurs` et `/supervision` protégées côté frontend
+
+### ✨ Améliorations UI
+
+#### Modal Bobines en Stock
+- Suppression du champ "Notes" du formulaire
+- Nom de l'opérateur en violet gras
+- Repositionnement du modal vers le haut pour meilleur affichage des dropdowns
+
+#### Branding Api-Track
+- Nouveau logo sur la page de connexion (`/logologin.png`)
+- Nouveau logo dans le layout (`/logo.png`)
+- Version affichée : V2.9
+
+### 🗃️ Base de données
+
+#### Nouvelles données
+- **17 grades** dans la table `grades` :
+  - API 5L : B, X42, X46, X52, X56, X60, X65, X70, X80
+  - API 5CT : J55, K55, N80, L80, P110
+  - EN 10025 : S235JR, S275JR, S355JR
+- **12 motifs de retard** dans la table `motifs_retard` :
+  - Problème technique, Panne machine, Pas de Forklift, Problème électrique
+  - Défaut sur bobine, Attente de validation, Manque de personnel
+  - Problème de sécurité, Attente de matériel, Problème de documentation
+  - Conditions météo, Autre
+- **Paramètres maintenance** dans `project_settings` :
+  - maintenance_mode, maintenance_message
+
+### 🔐 Sécurité
+- Validation de date côté backend pour éviter les incohérences chronologiques
+- Logs des modifications admin avec identification de l'utilisateur
+
+---
+
+## [Api-Track 1.0.0] — 2026-03-03
+
+### Fork & Renommage
+- Fork du projet **Logi-Track V2.5** (DeLTa-X Tunisia)
+- Renommage du projet en **Api-Track** pour harmonisation avec la nouvelle identité
+- Mise à jour des fichiers `package.json` (backend et frontend)
+- Configuration de la connexion MySQL vers la base `apitrack` locale (Laragon)
+- Création d'un nouveau README adapté (`README_APITRACK.md`)
+
+### Configuration initiale
+- Base de données : `apitrack` (MySQL via Laragon)
+- Utilisateur : `root` / Mot de passe : `123456`
+- Backend : port 3003
+- Frontend : port 5174 (dev)
+
+### À venir
+- Modifications des modules selon les besoins métier
+- Personnalisation de l'interface
+- Ajout de nouvelles fonctionnalités
+
+---
+
+## Historique Logi-Track V2 (référence)
 
 ## [2.5.0] — 2026-02-XX
 

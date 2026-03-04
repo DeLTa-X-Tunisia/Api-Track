@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { adminApi } from '../services/api';
+import { adminApi, maintenanceApi } from '../services/api';
 import socketService from '../services/socket';
 import { useToast } from '../components/Toast';
 import { useConfirm } from '../components/ConfirmModal';
@@ -25,7 +25,11 @@ import {
   Radio,
   Power,
   CheckCircle,
-  Trash2
+  Trash2,
+  Settings,
+  Wrench,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 
 // Role labels & colors
@@ -76,6 +80,11 @@ export default function AdminSupervision() {
 
   // Sent messages log
   const [sentMessages, setSentMessages] = useState([]);
+
+  // Maintenance mode
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
+  const [maintenanceMessage, setMaintenanceMessage] = useState('');
+  const [maintenanceLoading, setMaintenanceLoading] = useState(false);
 
   // Timer for durations
   const [, setTick] = useState(0);
@@ -130,6 +139,48 @@ export default function AdminSupervision() {
     const interval = setInterval(() => setTick(t => t + 1), 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch maintenance settings on mount
+  useEffect(() => {
+    const fetchMaintenance = async () => {
+      try {
+        const { data } = await maintenanceApi.getSettings();
+        setMaintenanceEnabled(data.enabled);
+        setMaintenanceMessage(data.message || '');
+      } catch (err) {
+        console.error('Erreur fetch maintenance:', err);
+      }
+    };
+    fetchMaintenance();
+  }, []);
+
+  // Toggle maintenance mode
+  const handleToggleMaintenance = async () => {
+    setMaintenanceLoading(true);
+    try {
+      const newState = !maintenanceEnabled;
+      await maintenanceApi.toggle(newState, maintenanceMessage);
+      setMaintenanceEnabled(newState);
+      toast.success(newState ? 'Mode maintenance activé' : 'Mode maintenance désactivé');
+    } catch (err) {
+      toast.error('Erreur changement mode maintenance');
+    } finally {
+      setMaintenanceLoading(false);
+    }
+  };
+
+  // Save maintenance message
+  const handleSaveMaintenanceMessage = async () => {
+    setMaintenanceLoading(true);
+    try {
+      await maintenanceApi.toggle(maintenanceEnabled, maintenanceMessage);
+      toast.success('Message de maintenance enregistré');
+    } catch (err) {
+      toast.error('Erreur enregistrement message');
+    } finally {
+      setMaintenanceLoading(false);
+    }
+  };
 
   // Disconnect user
   const handleDisconnect = async (userInfo) => {
@@ -297,6 +348,64 @@ export default function AdminSupervision() {
             </div>
           );
         }).filter(Boolean)}
+      </div>
+
+      {/* Maintenance Mode Panel */}
+      <div className={`rounded-xl border-2 shadow-sm overflow-hidden transition-all ${maintenanceEnabled ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-300' : 'bg-white border-gray-200'}`}>
+        <div className="px-5 py-4 border-b border-gray-100/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${maintenanceEnabled ? 'bg-orange-100' : 'bg-gray-100'}`}>
+                <Wrench className={`w-5 h-5 ${maintenanceEnabled ? 'text-orange-600' : 'text-gray-600'}`} />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Mode Maintenance</h2>
+                <p className="text-xs text-gray-500">Affiche une page de maintenance pour tous les utilisateurs</p>
+              </div>
+            </div>
+            <button
+              onClick={handleToggleMaintenance}
+              disabled={maintenanceLoading}
+              className="relative focus:outline-none disabled:opacity-50"
+              title={maintenanceEnabled ? 'Désactiver' : 'Activer'}
+            >
+              {maintenanceEnabled ? (
+                <ToggleRight className="w-12 h-12 text-orange-500 hover:text-orange-600 transition-colors" />
+              ) : (
+                <ToggleLeft className="w-12 h-12 text-gray-400 hover:text-gray-500 transition-colors" />
+              )}
+            </button>
+          </div>
+        </div>
+        
+        <div className="px-5 py-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Message affiché aux utilisateurs
+          </label>
+          <div className="flex gap-2">
+            <textarea
+              value={maintenanceMessage}
+              onChange={(e) => setMaintenanceMessage(e.target.value)}
+              placeholder="Api-Track est actuellement en maintenance. Nous serons de retour très bientôt !"
+              rows={2}
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none"
+            />
+            <button
+              onClick={handleSaveMaintenanceMessage}
+              disabled={maintenanceLoading}
+              className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm font-medium hover:bg-violet-700 transition-colors disabled:opacity-50 self-end"
+            >
+              Enregistrer
+            </button>
+          </div>
+          
+          {maintenanceEnabled && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-orange-700 bg-orange-100/50 rounded-lg px-3 py-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>La page de maintenance est actuellement visible pour tous les utilisateurs (sauf admin système)</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Connected users table */}
