@@ -3,4 +3,4 @@
     @android.webkit.JavascriptInterface <methods>;
 }
 -keepattributes JavascriptInterface
--keep class com.deltatx.logitrack.WebAppInterface { *; }
+-keep class com.deltatx.apitrack.** { *; }

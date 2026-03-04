@@ -51,7 +51,7 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * MainActivity — Affiche Logi-Track V2 en WebView plein écran
+ * MainActivity — Affiche ApiTrack en WebView plein écran
  *
  * Fonctionnalités V2 :
  * - File upload & Camera support pour photos étapes tube
@@ -279,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
                 try {
                     new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("Logi-Track")
+                        .setTitle("ApiTrack")
                         .setMessage(message)
                         .setPositiveButton("OK", (dialog, which) -> result.confirm())
                         .setCancelable(false)
@@ -294,7 +294,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onJsConfirm(WebView view, String url, String message, JsResult result) {
                 try {
                     new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("Logi-Track")
+                        .setTitle("ApiTrack")
                         .setMessage(message)
                         .setPositiveButton("Oui", (dialog, which) -> result.confirm())
                         .setNegativeButton("Non", (dialog, which) -> result.cancel())
@@ -467,7 +467,7 @@ public class MainActivity extends AppCompatActivity {
 
             request.addRequestHeader("User-Agent", userAgent);
             request.setTitle(fileName);
-            request.setDescription("Téléchargement Logi-Track V2");
+            request.setDescription("Téléchargement ApiTrack");
             request.allowScanningByMediaScanner();
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
             request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
