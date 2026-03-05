@@ -1,7 +1,7 @@
 /**
  * Routes API — Équipes de Production
  * CRUD: qualifications, zones, personnel, équipes
- * Logi-Track V2
+ * Api-Track V2
  */
 
 const express = require('express');

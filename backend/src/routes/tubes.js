@@ -1114,7 +1114,7 @@ router.get('/:id/pdf', async (req, res) => {
     const doc = new PDFDocument({
       size: 'A4',
       margins: { top: 50, bottom: 50, left: 40, right: 40 },
-      info: { Title: `Rapport Tube N°${tube.numero}`, Author: 'Logi-Track V2', Subject: 'Rapport de production tube spirale' },
+      info: { Title: `Rapport Tube N°${tube.numero}`, Author: 'Api-Track V2', Subject: 'Rapport de production tube spirale' },
       bufferPages: true,
     });
     res.setHeader('Content-Type', 'application/pdf');
@@ -1282,7 +1282,7 @@ router.get('/:id/pdf', async (req, res) => {
     }
 
     // Center text
-    const clientName = settingsMap.client_name || settingsMap.project_name || 'Logi-Track V2';
+    const clientName = settingsMap.client_name || settingsMap.project_name || 'Api-Track V2';
     const clientAddr = settingsMap.client_address || '';
     const projectAddr = settingsMap.project_address || '';
     const projectCode = settingsMap.project_code || '';
@@ -1729,7 +1729,7 @@ router.get('/:id/pdf', async (req, res) => {
 
       // Footer text
       doc.fillColor(C.gray).fontSize(7).font('Helvetica').text(
-        `Logi-Track V2 — Rapport Tube N°${tube.numero} — ${new Date().toLocaleDateString('fr-FR')}`,
+        `Api-Track V2 — Rapport Tube N°${tube.numero} — ${new Date().toLocaleDateString('fr-FR')}`,
         ML, FOOTER_Y, { width: CONTENT_W * 0.7, lineBreak: false }
       );
       doc.fillColor(C.gray).fontSize(7).font('Helvetica').text(

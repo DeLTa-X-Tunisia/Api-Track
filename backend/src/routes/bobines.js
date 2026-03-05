@@ -1,6 +1,6 @@
 /**
  * Routes API pour la gestion des Bobines en Stock
- * Module Bobines - Logi-Track V2
+ * Module Bobines - Api-Track V2
  */
 
 const express = require('express');

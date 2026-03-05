@@ -190,7 +190,7 @@ router.get('/:id/pdf', async (req, res) => {
       margin: 40,
       info: {
         Title: `Rapport Lot ${lot.numero}`,
-        Author: 'Logi-Track V2',
+        Author: 'Api-Track V2',
         Subject: 'Rapport de lot'
       }
     });
@@ -233,7 +233,7 @@ router.get('/:id/pdf', async (req, res) => {
        .text(`Rapport de Lot N° ${lot.numero}`, 40, yPos, { align: 'center', width: pageWidth });
     yPos += 25;
     doc.fillColor(gray).fontSize(9).font('Helvetica')
-       .text(`Logi-Track V2 — Généré le ${formatDate(new Date())} à ${new Date().toLocaleTimeString('fr-FR')}`, 40, yPos, { align: 'center', width: pageWidth });
+       .text(`Api-Track V2 — Généré le ${formatDate(new Date())} à ${new Date().toLocaleTimeString('fr-FR')}`, 40, yPos, { align: 'center', width: pageWidth });
     yPos += 16;
     doc.strokeColor(primary).lineWidth(1.5)
        .moveTo(40, yPos).lineTo(40 + pageWidth, yPos).stroke();

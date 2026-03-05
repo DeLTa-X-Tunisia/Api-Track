@@ -142,7 +142,7 @@ app.get('/api/health', async (req, res) => {
   const status = dbOk ? 'OK' : 'DEGRADED';
   res.status(dbOk ? 200 : 503).json({ 
     status, 
-    message: 'Logi-Track V2 API is running',
+    message: 'Api-Track V2 API is running',
     version: '2.0.0',
     database: dbOk ? 'connected' : 'disconnected',
     uptime: Math.round(process.uptime()),
@@ -343,7 +343,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('╔═══════════════════════════════════════════════════════════════╗');
   console.log('║                                                               ║');
-  console.log('║           🏭  LOGI-TRACK V2 API SERVER  🏭                    ║');
+  console.log('║           🏭  API-TRACK V2 API SERVER  🏭                    ║');
   console.log('║                                                               ║');
   console.log(`║   🚀 http://localhost:${PORT}                                  ║`);
   console.log('║   🔌 Socket.io activé pour notifications temps réel           ║');

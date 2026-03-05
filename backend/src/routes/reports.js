@@ -1,6 +1,6 @@
 /**
  * Routes Rapports & Export
- * Génération de rapports Excel pour Logi-Track V2
+ * Génération de rapports Excel pour Api-Track V2
  */
 const express = require('express');
 const router = express.Router();
@@ -655,7 +655,7 @@ router.get('/situation-generale', async (req, res) => {
     // ============================================
     const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
     const filePrefix = lang === 'en' ? 'General_Status' : 'Situation_Generale';
-    const filename = `${filePrefix}_LogiTrack_${dateStr}.xlsx`;
+    const filename = `${filePrefix}_ApiTrack_${dateStr}.xlsx`;
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

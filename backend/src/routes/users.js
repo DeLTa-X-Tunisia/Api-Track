@@ -1,5 +1,5 @@
 /**
- * Routes de gestion des utilisateurs — Logi-Track V2
+ * Routes de gestion des utilisateurs — Api-Track V2
  * CRUD complet, statistiques, gestion des entreprises, régénération de code
  */
 
