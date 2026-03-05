@@ -242,7 +242,7 @@ export const maintenanceApi = {
 // ============================================
 export const reportsApi = {
   getStats: () => api.get('/reports/stats'),
-  downloadSituationGenerale: () => api.get('/reports/situation-generale', { responseType: 'blob' }),
+  downloadSituationGenerale: (lang = 'fr') => api.get(`/reports/situation-generale?lang=${lang}`, { responseType: 'blob' }),
 };
 
 // ============================================

@@ -6,6 +6,34 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
 
 ---
 
+## [2.9.1] — 2026-03-04
+
+### 🚀 Nouvelles fonctionnalités
+
+#### Assistant IA Boualam
+- **Agent IA expert en soudure** accessible à tous les utilisateurs
+  - Bouton flottant violet en bas à droite de l'écran
+  - Interface de chat moderne et élégante
+  - Design responsive optimisé pour mobile
+- **Base de connaissances intégrée** couvrant :
+  - Soudage SAW (Submerged Arc Welding)
+  - Configuration des 4 têtes de soudure (ID1, ID2, OD1, OD2)
+  - Défauts de soudure et solutions
+  - Norme API 5L (grades, PSL1/PSL2)
+  - Les 12 étapes de production des tubes spirales
+  - Flux de soudure et paramètres
+  - Contrôle qualité (CND, essais)
+  - Procédures de réparation
+  - Sécurité et EPI
+- **Fonctionnalités du chat** :
+  - Réponses formatées avec markdown
+  - Copier les réponses
+  - Réinitialiser la conversation
+  - Minimiser/Maximiser la fenêtre
+  - Animation de frappe
+
+---
+
 ## [2.9.0] — 2026-03-04
 
 ### 🚀 Nouvelles fonctionnalités

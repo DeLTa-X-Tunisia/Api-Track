@@ -11,21 +11,202 @@ const ExcelJS = require('exceljs');
 // Middleware auth sur toutes les routes
 router.use(authenticateToken);
 
-// Étapes de production (identique à tubes.js)
-const ETAPES_PRODUCTION = [
-  { numero: 1, code: 'FORMAGE', nom: 'Formage' },
-  { numero: 2, code: 'POINTAGE', nom: 'Pointage (GMAW)' },
-  { numero: 3, code: 'CV_POINTAGE', nom: 'CV Pointage' },
-  { numero: 4, code: 'SAW_ID_OD', nom: 'SAW ID/OD' },
-  { numero: 5, code: 'CV_CORDON', nom: 'CV Cordon' },
-  { numero: 6, code: 'MACRO', nom: 'Macro' },
-  { numero: 7, code: 'CHANFREIN', nom: 'Chanfrein' },
-  { numero: 8, code: 'HYDROTEST', nom: 'Hydrotest' },
-  { numero: 9, code: 'CV_FUITE', nom: 'CV Fuite' },
-  { numero: 10, code: 'UT', nom: 'UT' },
-  { numero: 11, code: 'RADIO_SCOPIE', nom: 'Radio Scopie' },
-  { numero: 12, code: 'CONTROLE_DIM', nom: 'Contrôle dim.' },
-];
+// ============================================
+// TRANSLATIONS / TRADUCTIONS
+// ============================================
+const TRANSLATIONS = {
+  fr: {
+    // Étapes
+    etapes: [
+      { numero: 1, code: 'FORMAGE', nom: 'Formage' },
+      { numero: 2, code: 'POINTAGE', nom: 'Pointage (GMAW)' },
+      { numero: 3, code: 'CV_POINTAGE', nom: 'CV Pointage' },
+      { numero: 4, code: 'SAW_ID_OD', nom: 'SAW ID/OD' },
+      { numero: 5, code: 'CV_CORDON', nom: 'CV Cordon' },
+      { numero: 6, code: 'MACRO', nom: 'Macro' },
+      { numero: 7, code: 'CHANFREIN', nom: 'Chanfrein' },
+      { numero: 8, code: 'HYDROTEST', nom: 'Hydrotest' },
+      { numero: 9, code: 'CV_FUITE', nom: 'CV Fuite' },
+      { numero: 10, code: 'UT', nom: 'UT' },
+      { numero: 11, code: 'RADIO_SCOPIE', nom: 'Radio Scopie' },
+      { numero: 12, code: 'CONTROLE_DIM', nom: 'Contrôle dim.' },
+    ],
+    // Statuts tube
+    statut: {
+      'en_production': 'En production',
+      'termine': 'Terminé',
+      'rebut': 'Rebut',
+      'en_attente': 'En attente',
+      'en_reparation': 'En réparation',
+      'interrompu': 'Interrompu',
+    },
+    // Décisions
+    decision: {
+      'en_attente': 'En attente',
+      'certifie_api': 'Certifié API',
+      'certifie_hydraulique': 'Certifié Hydraulique',
+      'declasse': 'Déclassé',
+      'rebut': 'Rebut',
+    },
+    // Colonnes tubes
+    columns: {
+      index: 'N°',
+      numero: 'N° Tube',
+      lot: 'Lot',
+      bobine: 'Bobine',
+      grade: 'Grade',
+      diametre_mm: 'Ø (mm)',
+      diametre_pouce: 'Ø (pouce)',
+      epaisseur: 'Ép. (mm)',
+      longueur: 'Long. (m)',
+      poids: 'Poids (kg)',
+      created_at: 'Date Début',
+      saw_date: 'Date SAW',
+      date_fin: 'Date Fin',
+      nb_repairs: 'Réparations',
+      statut: 'Statut',
+      decision: 'Décision',
+    },
+    // Colonnes réparations
+    repairColumns: {
+      index: 'N°',
+      tube_numero: 'N° Tube',
+      etape: 'Étape',
+      defaut: 'Défaut',
+      cause: 'Cause',
+      responsabilite: 'Responsabilité',
+      action: 'Action prise',
+      operateur: 'Opérateur',
+      date: 'Date',
+    },
+    // Titres et textes
+    titles: {
+      sheetTubes: 'Situation Générale',
+      sheetRepairs: 'Réparations',
+      sheetSummary: 'Résumé',
+      titleTubes: 'SITUATION GÉNÉRALE — TUBES DE PRODUCTION',
+      titleRepairs: 'RÉPARATIONS — DÉTAIL DES DÉFAUTS',
+      titleSummary: 'RÉSUMÉ — SITUATION GÉNÉRALE',
+      noRepairs: 'Aucune réparation enregistrée',
+      exportedOn: 'Exporté le',
+    },
+    // Résumé
+    summary: {
+      production: 'PRODUCTION',
+      totalTubes: 'Total tubes',
+      completed: 'Terminés',
+      inProduction: 'En production',
+      inRepair: 'En réparation',
+      scrapped: 'Rebuts',
+      decisions: 'DÉCISIONS',
+      certifiedApi: 'Certifié API',
+      certifiedHydraulic: 'Certifié Hydraulique',
+      downgraded: 'Déclassé',
+      pendingDecision: 'En attente de décision',
+      repairs: 'RÉPARATIONS',
+      totalDefects: 'Total défauts réparés',
+      tubesWithRepairs: 'Tubes avec réparations',
+    },
+    dateLocale: 'fr-FR',
+  },
+  en: {
+    // Steps
+    etapes: [
+      { numero: 1, code: 'FORMAGE', nom: 'Forming' },
+      { numero: 2, code: 'POINTAGE', nom: 'Tacking (GMAW)' },
+      { numero: 3, code: 'CV_POINTAGE', nom: 'Tack Inspection' },
+      { numero: 4, code: 'SAW_ID_OD', nom: 'SAW ID/OD' },
+      { numero: 5, code: 'CV_CORDON', nom: 'Weld Inspection' },
+      { numero: 6, code: 'MACRO', nom: 'Macro' },
+      { numero: 7, code: 'CHANFREIN', nom: 'Beveling' },
+      { numero: 8, code: 'HYDROTEST', nom: 'Hydrotest' },
+      { numero: 9, code: 'CV_FUITE', nom: 'Leak Inspection' },
+      { numero: 10, code: 'UT', nom: 'UT' },
+      { numero: 11, code: 'RADIO_SCOPIE', nom: 'Radioscopy' },
+      { numero: 12, code: 'CONTROLE_DIM', nom: 'Dim. Control' },
+    ],
+    // Tube statuses
+    statut: {
+      'en_production': 'In Production',
+      'termine': 'Completed',
+      'rebut': 'Scrapped',
+      'en_attente': 'Pending',
+      'en_reparation': 'In Repair',
+      'interrompu': 'Interrupted',
+    },
+    // Decisions
+    decision: {
+      'en_attente': 'Pending',
+      'certifie_api': 'API Certified',
+      'certifie_hydraulique': 'Hydraulic Certified',
+      'declasse': 'Downgraded',
+      'rebut': 'Scrapped',
+    },
+    // Tube columns
+    columns: {
+      index: '#',
+      numero: 'Tube #',
+      lot: 'Batch',
+      bobine: 'Coil',
+      grade: 'Grade',
+      diametre_mm: 'Ø (mm)',
+      diametre_pouce: 'Ø (inch)',
+      epaisseur: 'Thk. (mm)',
+      longueur: 'Len. (m)',
+      poids: 'Weight (kg)',
+      created_at: 'Start Date',
+      saw_date: 'SAW Date',
+      date_fin: 'End Date',
+      nb_repairs: 'Repairs',
+      statut: 'Status',
+      decision: 'Decision',
+    },
+    // Repair columns
+    repairColumns: {
+      index: '#',
+      tube_numero: 'Tube #',
+      etape: 'Step',
+      defaut: 'Defect',
+      cause: 'Cause',
+      responsabilite: 'Responsibility',
+      action: 'Action Taken',
+      operateur: 'Operator',
+      date: 'Date',
+    },
+    // Titles and texts
+    titles: {
+      sheetTubes: 'General Status',
+      sheetRepairs: 'Repairs',
+      sheetSummary: 'Summary',
+      titleTubes: 'GENERAL STATUS — PRODUCTION TUBES',
+      titleRepairs: 'REPAIRS — DEFECT DETAILS',
+      titleSummary: 'SUMMARY — GENERAL STATUS',
+      noRepairs: 'No repairs recorded',
+      exportedOn: 'Exported on',
+    },
+    // Summary
+    summary: {
+      production: 'PRODUCTION',
+      totalTubes: 'Total tubes',
+      completed: 'Completed',
+      inProduction: 'In production',
+      inRepair: 'In repair',
+      scrapped: 'Scrapped',
+      decisions: 'DECISIONS',
+      certifiedApi: 'API Certified',
+      certifiedHydraulic: 'Hydraulic Certified',
+      downgraded: 'Downgraded',
+      pendingDecision: 'Pending decision',
+      repairs: 'REPAIRS',
+      totalDefects: 'Total defects repaired',
+      tubesWithRepairs: 'Tubes with repairs',
+    },
+    dateLocale: 'en-US',
+  }
+};
+
+// Étapes de production (fallback)
+const ETAPES_PRODUCTION = TRANSLATIONS.fr.etapes;
 
 // ============================================
 // HELPER: Styles
@@ -36,6 +217,8 @@ const COLORS = {
   sectionBg: 'FFF3F4F6',    // Light gray
   greenBg: 'FFD1FAE5',      // Green light
   greenFont: 'FF065F46',
+  blueBg: 'FFDBEAFE',       // Blue light (for Hydraulic)
+  blueFont: 'FF1E40AF',     // Blue dark
   orangeBg: 'FFFEF3C7',     // Orange light
   orangeFont: 'FF92400E',
   redBg: 'FFFEE2E2',        // Red light
@@ -86,26 +269,14 @@ function applyCellStyle(cell, options = {}) {
   }
 }
 
-function getStatutDisplay(statut) {
-  const map = {
-    'en_production': 'En production',
-    'termine': 'Terminé',
-    'rebut': 'Rebut',
-    'en_attente': 'En attente',
-    'en_reparation': 'En réparation',
-    'interrompu': 'Interrompu',
-  };
-  return map[statut] || statut || '-';
+function getStatutDisplay(statut, lang = 'fr') {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  return t.statut[statut] || statut || '-';
 }
 
-function getDecisionDisplay(decision) {
-  const map = {
-    'en_attente': 'En attente',
-    'certifie_api': 'Certifié API',
-    'certifie_hydraulique': 'Certifié Hydraulique',
-    'declasse': 'Déclassé',
-  };
-  return map[decision] || decision || '-';
+function getDecisionDisplay(decision, lang = 'fr') {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.fr;
+  return t.decision[decision] || decision || '-';
 }
 
 function getEtapeStatutDisplay(statut) {
@@ -131,27 +302,34 @@ function getEtapeStatutStyle(statut) {
   }
 }
 
-function formatDate(d) {
+function formatDate(d, lang = 'fr') {
   if (!d) return '-';
   const dt = new Date(d);
   if (isNaN(dt.getTime())) return '-';
-  return dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  // Format: DD/MM/YYYY (sans heure)
+  const day = String(dt.getDate()).padStart(2, '0');
+  const month = String(dt.getMonth() + 1).padStart(2, '0');
+  const year = dt.getFullYear();
+  return lang === 'en' ? `${month}/${day}/${year}` : `${day}/${month}/${year}`;
 }
 
-function formatDateTime(d) {
-  if (!d) return '-';
-  const dt = new Date(d);
-  if (isNaN(dt.getTime())) return '-';
-  return dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
-    ' ' + dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+function formatDateTime(d, lang = 'fr') {
+  // Pour le résumé, on utilise aussi juste la date sans heure
+  return formatDate(d, lang);
 }
 
 // ============================================
 // GET /api/reports/situation-generale
 // Export Excel: Situation Générale (Tubes + Réparations)
+// Query params: ?lang=fr (default) or ?lang=en
 // ============================================
 router.get('/situation-generale', async (req, res) => {
   try {
+    // Get language from query params (default: fr)
+    const lang = req.query.lang === 'en' ? 'en' : 'fr';
+    const t = TRANSLATIONS[lang];
+    const etapes = t.etapes;
+
     // 1. Fetch all tubes with lot info
     const [tubes] = await pool.query(`
       SELECT t.*, 
@@ -164,7 +342,7 @@ router.get('/situation-generale', async (req, res) => {
     `);
 
     // 2. Fetch all tube_etapes
-    const [etapes] = await pool.query(`
+    const [tubeEtapesRows] = await pool.query(`
       SELECT te.tube_id, te.etape_numero, te.statut, te.completed_at, te.operateur_nom, te.operateur_prenom
       FROM tube_etapes te
       ORDER BY te.tube_id, te.etape_numero
@@ -182,7 +360,7 @@ router.get('/situation-generale', async (req, res) => {
 
     // Build maps
     const etapesMap = {};
-    for (const e of etapes) {
+    for (const e of tubeEtapesRows) {
       if (!etapesMap[e.tube_id]) etapesMap[e.tube_id] = {};
       etapesMap[e.tube_id][e.etape_numero] = e;
     }
@@ -197,42 +375,42 @@ router.get('/situation-generale', async (req, res) => {
     // Create workbook
     // ============================================
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Logi-Track V2';
+    workbook.creator = 'Mounir Azizi';
     workbook.created = new Date();
 
     // ============================================
     // SHEET 1: Situation Générale (Tubes)
     // ============================================
-    const wsTubes = workbook.addWorksheet('Situation Générale', {
+    const wsTubes = workbook.addWorksheet(t.titles.sheetTubes, {
       views: [{ state: 'frozen', ySplit: 2 }]
     });
 
     // Build columns
     const tubeColumns = [
-      { header: 'N°', key: 'index', width: 5 },
-      { header: 'N° Tube', key: 'numero', width: 10 },
-      { header: 'Lot', key: 'lot', width: 8 },
-      { header: 'Bobine', key: 'bobine', width: 12 },
-      { header: 'Grade', key: 'grade', width: 12 },
-      { header: 'Ø (mm)', key: 'diametre_mm', width: 10 },
-      { header: 'Ø (pouce)', key: 'diametre_pouce', width: 10 },
-      { header: 'Ép. (mm)', key: 'epaisseur', width: 9 },
-      { header: 'Long. (m)', key: 'longueur', width: 9 },
-      { header: 'Poids (kg)', key: 'poids', width: 10 },
+      { header: t.columns.index, key: 'index', width: 5 },
+      { header: t.columns.numero, key: 'numero', width: 10 },
+      { header: t.columns.lot, key: 'lot', width: 8 },
+      { header: t.columns.bobine, key: 'bobine', width: 12 },
+      { header: t.columns.grade, key: 'grade', width: 12 },
+      { header: t.columns.diametre_mm, key: 'diametre_mm', width: 10 },
+      { header: t.columns.diametre_pouce, key: 'diametre_pouce', width: 10 },
+      { header: t.columns.epaisseur, key: 'epaisseur', width: 9 },
+      { header: t.columns.longueur, key: 'longueur', width: 9 },
+      { header: t.columns.poids, key: 'poids', width: 10 },
     ];
 
     // Add etape columns
-    for (const etape of ETAPES_PRODUCTION) {
+    for (const etape of etapes) {
       tubeColumns.push({ header: etape.nom, key: `etape_${etape.numero}`, width: 11 });
     }
 
     tubeColumns.push(
-      { header: 'Date Début', key: 'created_at', width: 12 },
-      { header: 'Date SAW', key: 'saw_date', width: 12 },
-      { header: 'Date Fin', key: 'date_fin', width: 12 },
-      { header: 'Réparations', key: 'nb_repairs', width: 11 },
-      { header: 'Statut', key: 'statut', width: 14 },
-      { header: 'Décision', key: 'decision', width: 16 },
+      { header: t.columns.created_at, key: 'created_at', width: 12 },
+      { header: t.columns.saw_date, key: 'saw_date', width: 12 },
+      { header: t.columns.date_fin, key: 'date_fin', width: 12 },
+      { header: t.columns.nb_repairs, key: 'nb_repairs', width: 11 },
+      { header: t.columns.statut, key: 'statut', width: 14 },
+      { header: t.columns.decision, key: 'decision', width: 16 },
     );
 
     wsTubes.columns = tubeColumns;
@@ -242,7 +420,7 @@ router.get('/situation-generale', async (req, res) => {
     wsTubes.spliceRows(1, 0, []);
     wsTubes.mergeCells(1, 1, 1, totalCols);
     const titleCell = wsTubes.getCell(1, 1);
-    titleCell.value = 'SITUATION GÉNÉRALE — TUBES DE PRODUCTION';
+    titleCell.value = t.titles.titleTubes;
     titleCell.font = { bold: true, size: 13, color: { argb: COLORS.headerBg } };
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
     wsTubes.getRow(1).height = 30;
@@ -268,16 +446,16 @@ router.get('/situation-generale', async (req, res) => {
         epaisseur: tube.epaisseur ? Number(tube.epaisseur) : '-',
         longueur: tube.longueur ? Number(tube.longueur) : '-',
         poids: tube.poids ? Number(tube.poids) : '-',
-        statut: getStatutDisplay(tube.statut),
-        decision: getDecisionDisplay(tube.decision),
-        saw_date: formatDate(tube.saw_date),
-        created_at: formatDate(tube.created_at),
-        date_fin: formatDate(tube.date_fin_production),
+        statut: getStatutDisplay(tube.statut, lang),
+        decision: getDecisionDisplay(tube.decision, lang),
+        saw_date: formatDate(tube.saw_date, lang),
+        created_at: formatDate(tube.created_at, lang),
+        date_fin: formatDate(tube.date_fin_production, lang),
         nb_repairs: tubeRepairs.length || 0,
       };
 
       // Etape statuses
-      for (const etape of ETAPES_PRODUCTION) {
+      for (const etape of etapes) {
         const te = tubeEtapes[etape.numero];
         rowData[`etape_${etape.numero}`] = te ? getEtapeStatutDisplay(te.statut) : '-';
       }
@@ -309,7 +487,8 @@ router.get('/situation-generale', async (req, res) => {
 
         // Color decision cell
         if (col && col.key === 'decision') {
-          if (tube.decision === 'certifie_api' || tube.decision === 'certifie_hydraulique') Object.assign(opts, { bgColor: COLORS.greenBg, fontColor: COLORS.greenFont });
+          if (tube.decision === 'certifie_api') Object.assign(opts, { bgColor: COLORS.greenBg, fontColor: COLORS.greenFont });
+          else if (tube.decision === 'certifie_hydraulique') Object.assign(opts, { bgColor: COLORS.blueBg, fontColor: COLORS.blueFont });
           else if (tube.decision === 'declasse') Object.assign(opts, { bgColor: COLORS.redBg, fontColor: COLORS.redFont });
         }
 
@@ -328,20 +507,20 @@ router.get('/situation-generale', async (req, res) => {
     // ============================================
     // SHEET 2: Réparations
     // ============================================
-    const wsRepairs = workbook.addWorksheet('Réparations', {
+    const wsRepairs = workbook.addWorksheet(t.titles.sheetRepairs, {
       views: [{ state: 'frozen', ySplit: 2 }]
     });
 
     const repairColumns = [
-      { header: 'N°', key: 'index', width: 5 },
-      { header: 'N° Tube', key: 'tube_numero', width: 10 },
-      { header: 'Étape', key: 'etape', width: 18 },
-      { header: 'Défaut', key: 'defaut', width: 30 },
-      { header: 'Cause', key: 'cause', width: 30 },
-      { header: 'Responsabilité', key: 'responsabilite', width: 18 },
-      { header: 'Action prise', key: 'action', width: 30 },
-      { header: 'Opérateur', key: 'operateur', width: 18 },
-      { header: 'Date', key: 'date', width: 14 },
+      { header: t.repairColumns.index, key: 'index', width: 5 },
+      { header: t.repairColumns.tube_numero, key: 'tube_numero', width: 10 },
+      { header: t.repairColumns.etape, key: 'etape', width: 18 },
+      { header: t.repairColumns.defaut, key: 'defaut', width: 30 },
+      { header: t.repairColumns.cause, key: 'cause', width: 30 },
+      { header: t.repairColumns.responsabilite, key: 'responsabilite', width: 18 },
+      { header: t.repairColumns.action, key: 'action', width: 30 },
+      { header: t.repairColumns.operateur, key: 'operateur', width: 18 },
+      { header: t.repairColumns.date, key: 'date', width: 14 },
     ];
 
     wsRepairs.columns = repairColumns;
@@ -351,7 +530,7 @@ router.get('/situation-generale', async (req, res) => {
     wsRepairs.spliceRows(1, 0, []);
     wsRepairs.mergeCells(1, 1, 1, repairTotalCols);
     const repairTitleCell = wsRepairs.getCell(1, 1);
-    repairTitleCell.value = 'RÉPARATIONS — DÉTAIL DES DÉFAUTS';
+    repairTitleCell.value = t.titles.titleRepairs;
     repairTitleCell.font = { bold: true, size: 13, color: { argb: 'FFEF4444' } };
     repairTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
     wsRepairs.getRow(1).height = 30;
@@ -365,11 +544,12 @@ router.get('/situation-generale', async (req, res) => {
     let repairIndex = 0;
     for (const repair of repairs) {
       repairIndex++;
-      const etapeInfo = ETAPES_PRODUCTION.find(e => e.numero === repair.etape_numero);
+      const etapeInfo = etapes.find(e => e.numero === repair.etape_numero);
+      const stepLabel = lang === 'en' ? 'Step' : 'Étape';
       const row = wsRepairs.addRow({
         index: repairIndex,
         tube_numero: repair.tube_numero || '-',
-        etape: etapeInfo ? `${etapeInfo.numero}. ${etapeInfo.nom}` : `Étape ${repair.etape_numero}`,
+        etape: etapeInfo ? `${etapeInfo.numero}. ${etapeInfo.nom}` : `${stepLabel} ${repair.etape_numero}`,
         defaut: repair.defaut || '-',
         cause: repair.cause_defaut || '-',
         responsabilite: repair.responsabilite_nom || '-',
@@ -377,7 +557,7 @@ router.get('/situation-generale', async (req, res) => {
         operateur: repair.repair_operateur_nom 
           ? `${repair.repair_operateur_prenom || ''} ${repair.repair_operateur_nom}`.trim()
           : '-',
-        date: formatDateTime(repair.repair_date || repair.created_at),
+        date: formatDateTime(repair.repair_date || repair.created_at, lang),
       });
       row.height = 22;
       row.eachCell((cell) => applyCellStyle(cell, { align: 'left' }));
@@ -385,7 +565,7 @@ router.get('/situation-generale', async (req, res) => {
 
     // If no repairs, add an info row
     if (repairs.length === 0) {
-      const emptyRow = wsRepairs.addRow({ index: '-', tube_numero: 'Aucune réparation enregistrée', etape: '', defaut: '', cause: '', responsabilite: '', action: '', operateur: '', date: '' });
+      const emptyRow = wsRepairs.addRow({ index: '-', tube_numero: t.titles.noRepairs, etape: '', defaut: '', cause: '', responsabilite: '', action: '', operateur: '', date: '' });
       wsRepairs.mergeCells(emptyRow.number, 2, emptyRow.number, repairTotalCols);
       const mergedCell = wsRepairs.getCell(emptyRow.number, 2);
       mergedCell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -400,7 +580,7 @@ router.get('/situation-generale', async (req, res) => {
     // ============================================
     // SHEET 3: Résumé
     // ============================================
-    const wsSummary = workbook.addWorksheet('Résumé');
+    const wsSummary = workbook.addWorksheet(t.titles.sheetSummary);
 
     // Summary data
     const totalTubes = tubes.length;
@@ -420,7 +600,7 @@ router.get('/situation-generale', async (req, res) => {
     // Title
     wsSummary.mergeCells('A1:B1');
     const summaryTitle = wsSummary.getCell('A1');
-    summaryTitle.value = 'RÉSUMÉ — SITUATION GÉNÉRALE';
+    summaryTitle.value = t.titles.titleSummary;
     summaryTitle.font = { bold: true, size: 14, color: { argb: COLORS.headerBg } };
     summaryTitle.alignment = { horizontal: 'center', vertical: 'middle' };
     wsSummary.getRow(1).height = 35;
@@ -428,28 +608,28 @@ router.get('/situation-generale', async (req, res) => {
     // Date
     wsSummary.mergeCells('A2:B2');
     const dateCell = wsSummary.getCell('A2');
-    dateCell.value = `Exporté le ${formatDateTime(new Date())}`;
+    dateCell.value = `${t.titles.exportedOn} ${formatDateTime(new Date(), lang)}`;
     dateCell.font = { size: 9, italic: true, color: { argb: 'FF6B7280' } };
     dateCell.alignment = { horizontal: 'center' };
 
     const summaryData = [
       { label: '', value: '' },
-      { label: 'PRODUCTION', value: '', section: true },
-      { label: 'Total tubes', value: totalTubes },
-      { label: 'Terminés', value: termines },
-      { label: 'En production', value: enProd },
-      { label: 'En réparation', value: enRep },
-      { label: 'Rebuts', value: rebuts },
+      { label: t.summary.production, value: '', section: true },
+      { label: t.summary.totalTubes, value: totalTubes },
+      { label: t.summary.completed, value: termines },
+      { label: t.summary.inProduction, value: enProd },
+      { label: t.summary.inRepair, value: enRep },
+      { label: t.summary.scrapped, value: rebuts },
       { label: '', value: '' },
-      { label: 'DÉCISIONS', value: '', section: true },
-      { label: 'Certifié API', value: certifApi },
-      { label: 'Certifié Hydraulique', value: certifHydro },
-      { label: 'Déclassé', value: declasses },
-      { label: 'En attente de décision', value: totalTubes - certifApi - certifHydro - declasses },
+      { label: t.summary.decisions, value: '', section: true },
+      { label: t.summary.certifiedApi, value: certifApi },
+      { label: t.summary.certifiedHydraulic, value: certifHydro },
+      { label: t.summary.downgraded, value: declasses },
+      { label: t.summary.pendingDecision, value: totalTubes - certifApi - certifHydro - declasses },
       { label: '', value: '' },
-      { label: 'RÉPARATIONS', value: '', section: true },
-      { label: 'Total défauts réparés', value: repairs.length },
-      { label: 'Tubes avec réparations', value: Object.keys(repairsMap).length },
+      { label: t.summary.repairs, value: '', section: true },
+      { label: t.summary.totalDefects, value: repairs.length },
+      { label: t.summary.tubesWithRepairs, value: Object.keys(repairsMap).length },
     ];
 
     let rowNum = 3;
@@ -474,7 +654,8 @@ router.get('/situation-generale', async (req, res) => {
     // Send response
     // ============================================
     const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
-    const filename = `Situation_Generale_LogiTrack_${dateStr}.xlsx`;
+    const filePrefix = lang === 'en' ? 'General_Status' : 'Situation_Generale';
+    const filename = `${filePrefix}_LogiTrack_${dateStr}.xlsx`;
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

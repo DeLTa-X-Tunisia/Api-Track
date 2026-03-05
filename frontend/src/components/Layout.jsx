@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import socketService from '../services/socket';
 import { settingsApi } from '../services/api';
+import BoualamChat, { BoualamButton } from './BoualamChat';
 import { 
   LayoutDashboard, 
   LogOut,
@@ -61,6 +62,7 @@ export default function Layout({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [projectSettings, setProjectSettings] = useState({});
+  const [boualamOpen, setBoualamOpen] = useState(false);
   const userMenuRef = useRef(null);
 
   // Charger les paramètres du projet pour le header
@@ -838,6 +840,10 @@ export default function Layout({ children }) {
           </div>
         </footer>
       </div>
+
+      {/* Boualam AI Assistant - Accessible à tous les utilisateurs */}
+      <BoualamButton onClick={() => setBoualamOpen(true)} />
+      <BoualamChat isOpen={boualamOpen} onClose={() => setBoualamOpen(false)} />
     </div>
   );
 }

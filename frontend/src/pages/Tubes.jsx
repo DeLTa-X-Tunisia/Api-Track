@@ -46,7 +46,7 @@ const STATUT_COLORS = {
   rebut: { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500' },
   en_attente: { bg: 'bg-amber-100', text: 'text-amber-800', dot: 'bg-amber-500' },
   en_reparation: { bg: 'bg-orange-100', text: 'text-orange-800', dot: 'bg-orange-500' },
-  interrompu: { bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-500' },
+  interrompu: { bg: 'bg-rose-100', text: 'text-rose-700', dot: 'bg-rose-500' },
 };
 
 const ETAPE_STATUT_COLORS = {
@@ -56,7 +56,7 @@ const ETAPE_STATUT_COLORS = {
   non_conforme: { bg: 'bg-red-50', border: 'border-red-300', icon: 'text-red-600' },
   saute: { bg: 'bg-amber-50', border: 'border-amber-300', icon: 'text-amber-600' },
   en_reparation: { bg: 'bg-orange-50', border: 'border-orange-300', icon: 'text-orange-600' },
-  interrompu: { bg: 'bg-gray-50', border: 'border-gray-300', icon: 'text-gray-500' },
+  interrompu: { bg: 'bg-rose-50', border: 'border-rose-400', icon: 'text-rose-600' },
 };
 
 const DECISION_INFO = {
@@ -264,7 +264,7 @@ export default function Tubes() {
         <StatCard label="Total" value={stats.total || 0} icon={Package} color="gray" />
         <StatCard label="En production" value={stats.en_production || 0} icon={Play} color="blue" />
         <StatCard label="En réparation" value={stats.en_reparation || 0} icon={Wrench} color="orange" />
-        <StatCard label="Interrompus" value={stats.interrompu || 0} icon={Pause} color="gray" />
+        <StatCard label="Interrompus" value={stats.interrompu || 0} icon={Pause} color="rose" />
         <StatCard label="Terminés" value={stats.termines || 0} icon={CheckCircle} color="green" />
         <StatCard label="Non conformes" value={stats.non_conformes || 0} icon={AlertTriangle} color="amber" />
         <StatCard label="Rebuts" value={stats.rebuts || 0} icon={XCircle} color="red" />
@@ -451,6 +451,7 @@ function StatCard({ label, value, icon: Icon, color }) {
     gray: 'bg-gray-50 text-gray-600', blue: 'bg-blue-50 text-blue-600',
     green: 'bg-green-50 text-green-600', red: 'bg-red-50 text-red-600',
     amber: 'bg-amber-50 text-amber-600', orange: 'bg-orange-50 text-orange-600',
+    rose: 'bg-rose-50 text-rose-600',
   };
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-3">
@@ -501,7 +502,7 @@ function TubeCard({ tube, onOpen, onDelete, canAct }) {
       className={`bg-white rounded-xl border hover:shadow-md transition-all cursor-pointer ${
         tube.statut === 'en_attente' ? 'border-red-300 bg-red-50/30' :
         tube.statut === 'en_reparation' ? 'border-orange-300 bg-orange-50/30' :
-        tube.statut === 'interrompu' ? 'border-yellow-300 bg-yellow-50/30' :
+        tube.statut === 'interrompu' ? 'border-rose-400 bg-rose-50/50' :
         tube.statut === 'termine' ? 'border-green-200' :
         'border-gray-200'
       }`}
@@ -587,12 +588,12 @@ function TubeCard({ tube, onOpen, onDelete, canAct }) {
             const s = tubeEtape?.statut || 'en_attente';
             const bgMap = {
               valide: 'bg-green-500', non_conforme: 'bg-red-500', en_cours: 'bg-blue-500',
-              saute: 'bg-amber-400', en_reparation: 'bg-orange-500', interrompu: 'bg-yellow-400', en_attente: 'bg-gray-200'
+              saute: 'bg-amber-400', en_reparation: 'bg-orange-500', interrompu: 'bg-rose-500', en_attente: 'bg-gray-200'
             };
             const pulseClass = s === 'en_cours' ? 'animate-pulse ring-2 ring-blue-300' :
               s === 'non_conforme' ? 'animate-pulse ring-2 ring-red-300' :
               s === 'en_reparation' ? 'animate-pulse ring-2 ring-orange-300' :
-              s === 'interrompu' ? 'animate-pulse ring-2 ring-yellow-300' : '';
+              s === 'interrompu' ? 'animate-pulse ring-2 ring-rose-300' : '';
             return (
               <div key={idx} className="flex-1 group relative" onClick={(e) => { e.stopPropagation(); }}>
                 <div className={`h-2 rounded-full ${bgMap[s] || 'bg-gray-200'} transition-all ${pulseClass} cursor-pointer`} 
@@ -1602,7 +1603,7 @@ function TubeDetailModal({ tube, onClose, onRefresh, canAct, isSystemAdmin }) {
                 const s = tubeEtape?.statut || 'en_attente';
                 const bgMap = {
                   valide: 'bg-green-500', non_conforme: 'bg-red-500', en_cours: 'bg-blue-500',
-                  saute: 'bg-amber-400', en_reparation: 'bg-orange-500', interrompu: 'bg-gray-400', en_attente: 'bg-gray-200'
+                  saute: 'bg-amber-400', en_reparation: 'bg-orange-500', interrompu: 'bg-rose-500', en_attente: 'bg-gray-200'
                 };
                 return <div key={idx} className={`flex-1 h-1.5 rounded-full ${bgMap[s] || 'bg-gray-200'}`} title={`${etape.nom}: ${s}`} />;
               })}
@@ -1684,7 +1685,7 @@ function TubeDetailModal({ tube, onClose, onRefresh, canAct, isSystemAdmin }) {
                       s === 'en_cours' ? 'border-blue-500 bg-blue-100 animate-pulse' :
                       s === 'non_conforme' ? 'border-red-500 bg-red-100' :
                       s === 'en_reparation' ? 'border-orange-500 bg-orange-100' :
-                      s === 'interrompu' ? 'border-gray-400 bg-gray-100' :
+                      s === 'interrompu' ? 'border-rose-500 bg-rose-100' :
                       s === 'saute' ? 'border-amber-500 bg-amber-100' :
                       'border-gray-300 bg-gray-50'
                     }`}>
@@ -1692,7 +1693,7 @@ function TubeDetailModal({ tube, onClose, onRefresh, canAct, isSystemAdmin }) {
                        s === 'en_cours' ? <Play className="w-3.5 h-3.5 text-blue-600" /> :
                        s === 'non_conforme' ? <XCircle className="w-4 h-4 text-red-600" /> :
                        s === 'en_reparation' ? <Wrench className="w-3.5 h-3.5 text-orange-600" /> :
-                       s === 'interrompu' ? <PauseCircle className="w-3.5 h-3.5 text-gray-500" /> :
+                       s === 'interrompu' ? <PauseCircle className="w-3.5 h-3.5 text-rose-600" /> :
                        s === 'saute' ? <SkipForward className="w-3.5 h-3.5 text-amber-600" /> :
                        <span className="text-xs font-bold text-gray-400">{etape.numero}</span>}
                     </div>
@@ -1717,7 +1718,7 @@ function TubeDetailModal({ tube, onClose, onRefresh, canAct, isSystemAdmin }) {
                             s === 'en_cours' ? 'bg-blue-100 text-blue-700' :
                             s === 'non_conforme' ? 'bg-red-100 text-red-700' :
                             s === 'en_reparation' ? 'bg-orange-100 text-orange-700' :
-                            s === 'interrompu' ? 'bg-gray-200 text-gray-700' :
+                            s === 'interrompu' ? 'bg-rose-100 text-rose-700' :
                             s === 'saute' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'
                           }`}>
                             {s === 'valide' ? 'Validé' : s === 'en_cours' ? 'En cours' :
@@ -2636,6 +2637,11 @@ function ResolveNCModal({ etapeNumero, onSubmit, onClose, loading }) {
       icon: ShieldCheck, color: 'amber'
     },
     {
+      value: 'declasse', label: 'Déclassé',
+      desc: 'Terminer avec mention Tube déclassé',
+      icon: AlertTriangle, color: 'orange'
+    },
+    {
       value: 'rebut', label: 'Rebut',
       desc: 'Mettre le tube au rebut définitif',
       icon: Ban, color: 'red'
@@ -2660,6 +2666,7 @@ function ResolveNCModal({ etapeNumero, onSubmit, onClose, loading }) {
             const colorMap = {
               blue: { border: 'border-blue-500 bg-blue-50', icon: 'text-blue-600' },
               amber: { border: 'border-amber-500 bg-amber-50', icon: 'text-amber-600' },
+              orange: { border: 'border-orange-500 bg-orange-50', icon: 'text-orange-600' },
               red: { border: 'border-red-500 bg-red-50', icon: 'text-red-600' },
             };
             const colors = colorMap[a.color];
@@ -3042,7 +3049,7 @@ function InterruptionModal({ etapeNumero, onSubmit, onClose, loading }) {
     { value: 'Manque de fictif', icon: '📦', label: 'Manque de fictif', desc: 'Matériel fictif manquant' },
     { value: 'Manque matériel', icon: '🏗️', label: 'Manque matériel', desc: 'Outillage / consommables' },
     { value: 'Maintenance planifiée', icon: '🛠️', label: 'Maintenance planifiée', desc: 'Intervention programmée' },
-    { value: 'Attente personnel', icon: '👷', label: 'Attente personnel', desc: 'Équipe incomplète' },
+    { value: 'Attente personnel CV', icon: '👷', label: 'Attente personnel CV', desc: 'Équipe CV incomplète' },
     { value: 'Coupure électrique', icon: '⚡', label: 'Coupure électrique', desc: 'Problème alimentation' },
   ];
 

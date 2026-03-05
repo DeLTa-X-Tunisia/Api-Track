@@ -530,6 +530,13 @@ router.put('/:id/resoudre-nc', canAct, async (req, res) => {
       } else {
         await pool.query("UPDATE tubes SET statut = 'termine', etape_courante = ?, date_fin_production = NOW() WHERE id = ?", [TOTAL_ETAPES, id]);
       }
+
+    } else if (action === 'declasse') {
+      // Marquer l'étape comme terminée avec mention déclassé
+      await pool.query(`UPDATE tube_etapes SET statut = 'valide', completed_at = NOW(), commentaire = CONCAT(IFNULL(commentaire,''), ' | DÉCLASSÉ: ', ?) WHERE tube_id = ? AND etape_numero = ?`, [commentaire || 'Tube déclassé', id, etape_numero]);
+      // Terminer le tube avec décision déclassé
+      await pool.query("UPDATE tubes SET statut = 'termine', decision = 'declasse', etape_courante = ?, date_fin_production = NOW() WHERE id = ?", [etape_numero, id]);
+      await logEtapeHistorique(id, etape_numero, 'declasse', commentaire || 'Tube déclassé', req);
     }
 
     const [updatedTube] = await pool.query('SELECT * FROM tubes WHERE id = ?', [id]);

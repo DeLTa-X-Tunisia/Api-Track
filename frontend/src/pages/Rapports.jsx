@@ -4,7 +4,7 @@ import { reportsApi } from '../services/api';
 import {
   FileSpreadsheet, Download, Loader2, FileText,
   Package, Layers, Cylinder, Wrench, LayoutGrid,
-  CheckCircle, ArrowRight, ArrowLeft
+  CheckCircle, ArrowRight, ArrowLeft, Globe
 } from 'lucide-react';
 
 // ============================================
@@ -105,6 +105,7 @@ export default function Rapports() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [downloadComplete, setDownloadComplete] = useState(false);
+  const [language, setLanguage] = useState('fr'); // 'fr' ou 'en'
 
   // Load stats on mount
   useEffect(() => {
@@ -137,7 +138,7 @@ export default function Rapports() {
     try {
       let response;
       if (selectedReport.id === 'situation-generale') {
-        response = await reportsApi.downloadSituationGenerale();
+        response = await reportsApi.downloadSituationGenerale(language);
       }
       if (response) {
         // Create download link
@@ -147,15 +148,16 @@ export default function Rapports() {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        const filePrefix = language === 'en' ? 'General_Status' : 'Situation_Generale';
         link.href = url;
-        link.download = `Situation_Generale_LogiTrack_${dateStr}.xlsx`;
+        link.download = `${filePrefix}_LogiTrack_${dateStr}.xlsx`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
         setDownloadComplete(true);
         setCurrentStep(3);
-        toast.success('Fichier Excel téléchargé avec succès');
+        toast.success(language === 'en' ? 'Excel file downloaded successfully' : 'Fichier Excel téléchargé avec succès');
       }
     } catch (err) {
       toast.error(err.response?.data?.error || 'Erreur lors du téléchargement');
@@ -312,18 +314,66 @@ export default function Rapports() {
                   <ul className="space-y-1.5 text-sm text-gray-600">
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
-                      <strong>Feuille 1 — Situation Générale :</strong> Tous les tubes avec étapes, statuts, décisions
+                      <strong>{language === 'en' ? 'Sheet 1 — General Status:' : 'Feuille 1 — Situation Générale :'}</strong> {language === 'en' ? 'All tubes with steps, statuses, decisions' : 'Tous les tubes avec étapes, statuts, décisions'}
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                      <strong>Feuille 2 — Réparations :</strong> Détail de tous les défauts, causes, responsabilités
+                      <strong>{language === 'en' ? 'Sheet 2 — Repairs:' : 'Feuille 2 — Réparations :'}</strong> {language === 'en' ? 'Detail of all defects, causes, responsibilities' : 'Détail de tous les défauts, causes, responsabilités'}
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
-                      <strong>Feuille 3 — Résumé :</strong> Statistiques globales de production
+                      <strong>{language === 'en' ? 'Sheet 3 — Summary:' : 'Feuille 3 — Résumé :'}</strong> {language === 'en' ? 'Global production statistics' : 'Statistiques globales de production'}
                     </li>
                   </ul>
                 )}
+              </div>
+
+              {/* Language selector */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-6 border border-blue-100">
+                <div className="flex items-center gap-3 mb-3">
+                  <Globe className="w-5 h-5 text-blue-600" />
+                  <h4 className="text-sm font-semibold text-gray-700">Langue du rapport</h4>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setLanguage('fr')}
+                    className={`flex-1 flex items-center justify-center gap-2.5 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+                      ${language === 'fr'
+                        ? 'bg-white text-blue-700 border-2 border-blue-500 shadow-md'
+                        : 'bg-white/60 text-gray-600 border border-gray-200 hover:border-blue-300 hover:bg-white'
+                      }`}
+                  >
+                    {/* Drapeau Français - SVG inline */}
+                    <svg className="w-8 h-6 rounded-sm shadow-sm flex-shrink-0" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="300" height="600" fill="#002654"/>
+                      <rect x="300" width="300" height="600" fill="#FFFFFF"/>
+                      <rect x="600" width="300" height="600" fill="#CE1126"/>
+                    </svg>
+                    Français
+                  </button>
+                  <button
+                    onClick={() => setLanguage('en')}
+                    className={`flex-1 flex items-center justify-center gap-2.5 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+                      ${language === 'en'
+                        ? 'bg-white text-blue-700 border-2 border-blue-500 shadow-md'
+                        : 'bg-white/60 text-gray-600 border border-gray-200 hover:border-blue-300 hover:bg-white'
+                      }`}
+                  >
+                    {/* Drapeau Britannique (Union Jack) - SVG inline */}
+                    <svg className="w-8 h-6 rounded-sm shadow-sm flex-shrink-0" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
+                      <clipPath id="s"><path d="M0,0 v30 h60 v-30 z"/></clipPath>
+                      <clipPath id="t"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath>
+                      <g clipPath="url(#s)">
+                        <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
+                        <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
+                        <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t)" stroke="#C8102E" strokeWidth="4"/>
+                        <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10"/>
+                        <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6"/>
+                      </g>
+                    </svg>
+                    English
+                  </button>
+                </div>
               </div>
 
               {/* Actions */}
@@ -392,7 +442,7 @@ export default function Rapports() {
 
       {/* Footer */}
       <div className="text-center text-xs text-gray-400 pb-4">
-        Crafted by hand with <span className="text-red-400">❤</span> by <span className="text-blue-500 font-medium">Azizi Mounir</span> — Logi-Track V2
+        Crafted by hand with <span className="text-red-400">❤</span> by <span className="text-blue-500 font-medium">Azizi Mounir</span> — Api-Track
       </div>
     </div>
   );

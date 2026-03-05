@@ -24,7 +24,14 @@ import {
   Microscope,
   ShieldCheck,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  ArrowDownCircle,
+  Info,
+  ChevronDown,
+  ChevronUp,
+  Wrench,
+  Pause,
+  Ban
 } from 'lucide-react';
 
 // Mapping icônes par code d'étape (12 étapes API 5L)
@@ -111,10 +118,6 @@ export default function Dashboard() {
   const bobines = data?.bobines || {};
   const activite = data?.activite_recente || [];
 
-  const tauxRebut = tubes.total > 0
-    ? ((tubes.rebuts / tubes.total) * 100).toFixed(1)
-    : '0.0';
-
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
@@ -132,51 +135,8 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Stats Cards principaux — 6 cartes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard
-          title="Tubes en cours"
-          value={tubes.en_cours}
-          icon={Clock}
-          color="primary"
-          trend={`${tubes.production_jour} créé(s) aujourd'hui`}
-        />
-        <StatCard
-          title="Tubes terminés"
-          value={tubes.termines}
-          icon={CheckCircle}
-          color="success"
-          trend={`${tubes.termines_jour} aujourd'hui`}
-        />
-        <StatCard
-          title="Certifié API"
-          value={tubes.certifie_api || 0}
-          icon={ShieldCheck}
-          color="warning"
-          trend={`${tubes.total > 0 ? ((tubes.certifie_api / tubes.total) * 100).toFixed(0) : 0}% du total`}
-        />
-        <StatCard
-          title="Certifié Hydraulique"
-          value={tubes.certifie_hydraulique || 0}
-          icon={Award}
-          color="info"
-          trend={`${tubes.total > 0 ? ((tubes.certifie_hydraulique / tubes.total) * 100).toFixed(0) : 0}% du total`}
-        />
-        <StatCard
-          title="Rebuts"
-          value={tubes.rebuts}
-          icon={AlertTriangle}
-          color="danger"
-          trend={`${tauxRebut}% taux de rebut`}
-        />
-        <StatCard
-          title="Total tubes"
-          value={tubes.total}
-          icon={TrendingUp}
-          color="accent"
-          trend={`${tubes.reparation} en réparation`}
-        />
-      </div>
+      {/* Charte Graphique des Tubes — Vue complète */}
+      <TubesChart tubes={tubes} />
 
       {/* Pipeline de Production API 5L */}
       <div className="card">
@@ -309,34 +269,6 @@ export default function Dashboard() {
 
 /* ─── Composants internes ─── */
 
-function StatCard({ title, value, icon: Icon, color, trend }) {
-  const colors = {
-    primary: { bg: 'bg-primary-50', text: 'text-primary-600', icon: 'bg-primary-100' },
-    success: { bg: 'bg-success-50', text: 'text-success-600', icon: 'bg-success-100' },
-    danger:  { bg: 'bg-danger-50',  text: 'text-danger-600',  icon: 'bg-danger-100' },
-    accent:  { bg: 'bg-accent-50',  text: 'text-accent-600',  icon: 'bg-accent-100' },
-    warning: { bg: 'bg-amber-50',   text: 'text-amber-600',   icon: 'bg-amber-100' },
-    info:    { bg: 'bg-blue-50',    text: 'text-blue-600',    icon: 'bg-blue-100' },
-  };
-
-  const colorConfig = colors[color] || colors.primary;
-
-  return (
-    <div className="card hover:shadow-lg transition-shadow">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1">{value}</p>
-          <p className={`text-xs mt-2 ${colorConfig.text}`}>{trend}</p>
-        </div>
-        <div className={`p-3 rounded-xl ${colorConfig.icon}`}>
-          <Icon className={`w-6 h-6 ${colorConfig.text}`} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ActivityItem({ icon: Icon, color, title, subtitle, time }) {
   return (
     <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
@@ -364,4 +296,268 @@ function formatTimeAgo(dateStr) {
   if (diffH < 24) return `Il y a ${diffH}h`;
   if (diffD < 7) return `Il y a ${diffD}j`;
   return date.toLocaleDateString('fr-FR');
+}
+
+/* ─── Charte Graphique des Tubes (Dynamique) ─── */
+
+// Configuration des statuts avec couleurs accessibles (WCAG AA)
+const TUBES_STATUTS = [
+  { 
+    key: 'en_cours', 
+    label: 'En cours', 
+    shortLabel: 'Cours',
+    color: 'bg-gray-500', 
+    barColor: '#6b7280',
+    textColor: 'text-gray-700',
+    bgLight: 'bg-gray-100',
+    borderColor: 'border-gray-300',
+    icon: Clock,
+  },
+  { 
+    key: 'termines', 
+    label: 'Terminés', 
+    shortLabel: 'Finis',
+    color: 'bg-emerald-500', 
+    barColor: '#10b981',
+    textColor: 'text-emerald-700',
+    bgLight: 'bg-emerald-50',
+    borderColor: 'border-emerald-300',
+    icon: CheckCircle,
+  },
+  { 
+    key: 'reparation', 
+    label: 'En réparation', 
+    shortLabel: 'Répar.',
+    color: 'bg-amber-700', 
+    barColor: '#b45309',
+    textColor: 'text-amber-800',
+    bgLight: 'bg-amber-50',
+    borderColor: 'border-amber-400',
+    icon: Wrench,
+  },
+  { 
+    key: 'interrompu', 
+    label: 'Interrompu', 
+    shortLabel: 'Inter.',
+    color: 'bg-violet-500', 
+    barColor: '#8b5cf6',
+    textColor: 'text-violet-700',
+    bgLight: 'bg-violet-50',
+    borderColor: 'border-violet-300',
+    icon: Pause,
+  },
+  { 
+    key: 'certifie_api', 
+    label: 'Certifié API', 
+    shortLabel: 'API',
+    color: 'bg-green-500', 
+    barColor: '#22c55e',
+    textColor: 'text-green-700',
+    bgLight: 'bg-green-50',
+    borderColor: 'border-green-300',
+    icon: ShieldCheck,
+  },
+  { 
+    key: 'certifie_hydraulique', 
+    label: 'Certifié Hydraulique', 
+    shortLabel: 'Hydro.',
+    color: 'bg-blue-500', 
+    barColor: '#3b82f6',
+    textColor: 'text-blue-700',
+    bgLight: 'bg-blue-50',
+    borderColor: 'border-blue-300',
+    icon: Award,
+  },
+  { 
+    key: 'declasse', 
+    label: 'Déclassé', 
+    shortLabel: 'Décl.',
+    color: 'bg-orange-500', 
+    barColor: '#f97316',
+    textColor: 'text-orange-700',
+    bgLight: 'bg-orange-50',
+    borderColor: 'border-orange-300',
+    icon: ArrowDownCircle,
+  },
+  { 
+    key: 'rebuts', 
+    label: 'Rebut', 
+    shortLabel: 'Rebut',
+    color: 'bg-red-500', 
+    barColor: '#ef4444',
+    textColor: 'text-red-700',
+    bgLight: 'bg-red-50',
+    borderColor: 'border-red-300',
+    icon: Ban,
+  },
+];
+
+function TubesChart({ tubes }) {
+  const total = tubes.total || 0;
+  const productionJour = tubes.production_jour || 0;
+  const terminesJour = tubes.termines_jour || 0;
+  
+  // Calculer les données pour chaque statut
+  const chartData = TUBES_STATUTS.map(statut => {
+    const value = tubes[statut.key] || 0;
+    const percent = total > 0 ? ((value / total) * 100) : 0;
+    return { ...statut, value, percent };
+  });
+
+  // Données pour la barre de progression (seulement ceux > 0)
+  const barData = chartData.filter(d => d.value > 0);
+
+  return (
+    <div className="card">
+      {/* Header avec total et infos du jour */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center">
+            <BarChart3 className="w-6 h-6 text-primary-600" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Répartition des Tubes</h2>
+            <p className="text-sm text-gray-500">Vue d'ensemble de la production</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+            <TrendingUp className="w-4 h-4 text-primary-500" />
+            <span className="font-bold text-gray-900">{total}</span>
+            <span className="text-gray-500">tubes</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-emerald-50 rounded-lg">
+            <Zap className="w-4 h-4 text-emerald-500" />
+            <span className="font-bold text-emerald-700">+{productionJour}</span>
+            <span className="text-emerald-600">aujourd'hui</span>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 1: Cartes détaillées par statut */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Package className="w-4 h-4 text-gray-400" />
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Détail par statut</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          {chartData.map((item) => {
+            const Icon = item.icon;
+            const isActive = item.value > 0;
+            
+            return (
+              <div 
+                key={item.key} 
+                className={`relative p-3 rounded-xl border-2 transition-all ${
+                  isActive 
+                    ? `${item.bgLight} ${item.borderColor} hover:shadow-lg` 
+                    : 'bg-gray-50 border-gray-100 opacity-60'
+                }`}
+              >
+                {/* Badge icône */}
+                <div className={`w-9 h-9 rounded-lg ${item.color} flex items-center justify-center mb-2 mx-auto shadow-sm`}>
+                  <Icon className="w-4 h-4 text-white" />
+                </div>
+                
+                {/* Label */}
+                <p className={`text-xs font-medium text-center mb-1 ${item.textColor} leading-tight`}>
+                  {item.label}
+                </p>
+                
+                {/* Valeur principale */}
+                <p className="text-2xl font-bold text-center text-gray-900">
+                  {item.value}
+                </p>
+                
+                {/* Pourcentage */}
+                <p className={`text-xs text-center ${isActive ? item.textColor : 'text-gray-400'}`}>
+                  {item.percent.toFixed(1)}%
+                </p>
+
+                {/* Mini indicateur de progression */}
+                <div className="mt-2 h-1 rounded-full bg-gray-200 overflow-hidden">
+                  <div 
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ 
+                      width: `${Math.min(item.percent, 100)}%`,
+                      backgroundColor: item.barColor
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Séparateur */}
+      <div className="border-t border-gray-100 my-5" />
+
+      {/* SECTION 2: Barre de progression visuelle */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Activity className="w-4 h-4 text-gray-400" />
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Distribution visuelle</span>
+        </div>
+        
+        {/* Barre de progression segmentée */}
+        <div className="h-8 rounded-xl overflow-hidden flex bg-gray-100 shadow-inner">
+          {barData.map((item) => (
+            <div
+              key={item.key}
+              className="h-full transition-all duration-700 relative group cursor-pointer"
+              style={{ 
+                width: `${item.percent}%`, 
+                backgroundColor: item.barColor,
+                minWidth: item.value > 0 ? '12px' : '0'
+              }}
+            >
+              {/* Pourcentage affiché si assez large */}
+              {item.percent >= 8 && (
+                <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">
+                  {item.percent.toFixed(0)}%
+                </span>
+              )}
+              {/* Tooltip au survol */}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-lg">
+                <span className="font-semibold">{item.label}</span>: {item.value} ({item.percent.toFixed(1)}%)
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Légende horizontale sous la barre */}
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-3">
+          {chartData.map((item) => (
+            <div key={item.key} className="flex items-center gap-1.5">
+              <span 
+                className="w-3 h-3 rounded-sm shadow-sm" 
+                style={{ backgroundColor: item.barColor }}
+              />
+              <span className="text-xs text-gray-600">{item.shortLabel}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer avec statistiques du jour */}
+      <div className="mt-5 pt-4 border-t border-gray-100">
+        <div className="flex flex-wrap justify-center gap-4 text-xs">
+          <div className="flex items-center gap-2 text-gray-500">
+            <Clock className="w-3.5 h-3.5" />
+            <span>Créés aujourd'hui: <span className="font-semibold text-gray-700">{productionJour}</span></span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-500">
+            <CheckCircle className="w-3.5 h-3.5" />
+            <span>Terminés aujourd'hui: <span className="font-semibold text-emerald-600">{terminesJour}</span></span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-500">
+            <Wrench className="w-3.5 h-3.5" />
+            <span>En réparation: <span className="font-semibold text-amber-600">{tubes.reparation || 0}</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

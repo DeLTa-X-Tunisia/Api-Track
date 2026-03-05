@@ -105,7 +105,7 @@ app.get('/api/mobile/download', (req, res) => {
   }
   const stat = fs.statSync(apkPath);
   res.setHeader('Content-Type', 'application/vnd.android.package-archive');
-  res.setHeader('Content-Disposition', 'attachment; filename="LogiTrack-V2.apk"');
+  res.setHeader('Content-Disposition', 'attachment; filename="ApiTrack.apk"');
   res.setHeader('Content-Length', stat.size);
   const stream = fs.createReadStream(apkPath);
   stream.pipe(res);
@@ -120,11 +120,11 @@ app.get('/api/mobile/info', (req, res) => {
   const stat = fs.statSync(apkPath);
   res.json({
     available: true,
-    fileName: 'LogiTrack-V2.apk',
+    fileName: 'ApiTrack.apk',
     size: stat.size,
     sizeFormatted: (stat.size / (1024 * 1024)).toFixed(1) + ' MB',
     lastModified: stat.mtime.toISOString(),
-    version: '2.1.0'
+    version: '2.9.0'
   });
 });
 
